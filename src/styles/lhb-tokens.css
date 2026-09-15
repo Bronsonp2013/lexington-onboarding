@@ -1,0 +1,341 @@
+/* ============================================================
+   LEXINGTON HOME BRANDS — Design System
+   colors_and_type.css
+
+   A unified token layer covering all five sub-brands:
+     • Lexington (flagship)
+     • Tommy Bahama Home
+     • Tommy Bahama Outdoor Living
+     • Barclay Butera
+     • Artistica Home
+     • Sligh
+
+   Across the portfolio the visual vocabulary is remarkably
+   consistent: classic serif typography, monochrome logo lockups,
+   ivory/cream paper grounds, warm metallic accents (gold, brass,
+   bronze, pewter), and editorial whitespace. Each sub-brand
+   tints that base palette toward its own destination/persona.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1) FONTS — Google Fonts substitutes
+   --------------------------------------------------------------
+   The real catalog set uses custom-drawn logotypes and what
+   appears to be Trajan / Hoefler Text / a proprietary serif.
+   We substitute with closely-matched open fonts. Replace with
+   licensed files when available — see fonts/SUBSTITUTIONS.md.
+   ------------------------------------------------------------ */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=Pinyon+Script&family=Petit+Formal+Script&family=Zilla+Slab:wght@400;500;600;700&display=swap");
+
+:root {
+
+  /* ============================================================
+     2) MASTER NEUTRAL PALETTE
+     Used by all sub-brands. Warm ivory paper, charcoal ink,
+     editorial grays. Mimics premium print catalogs.
+     ============================================================ */
+
+  --ink-100:       #1A1B1F;   /* deepest black — never pure */
+  --ink-90:        #25272C;   /* primary body ink */
+  --ink-80:        #2F3138;   /* logo charcoal */
+  --ink-70:        #4A4D55;   /* secondary text */
+  --ink-60:        #6E7079;   /* tertiary text, captions */
+  --ink-50:        #8B8D94;   /* hairlines, dividers (high) */
+  --ink-40:        #B5B6BB;   /* hairlines, dividers (low) */
+  --ink-30:        #D6D5D0;   /* placeholders, fills */
+  --ink-20:        #E8E4DC;   /* card grounds */
+  --ink-10:        #F2EDE3;   /* ivory paper */
+  --ink-05:        #F8F4EC;   /* lightest cream */
+  --paper:         #FBF8F2;   /* canvas — warmer than white */
+  --paper-cool:    #F6F4EF;   /* cooler alt paper */
+  --white:         #FFFFFF;
+
+  /* ============================================================
+     3) BRAND METALLICS
+     The gold swirl in the Lexington wordmark, brass/pewter
+     hardware finishes from the Chamberlain program, bronze
+     accents in Artistica metalwork.
+     ============================================================ */
+
+  --gold-antique:  #B8A66A;   /* Lexington logo "O" swirl */
+  --gold-burnish:  #A88B4D;   /* burnished brass hardware */
+  --gold-bright:   #C9A961;   /* bright brass nailhead */
+  --rose-gold:     #C6967E;   /* rose gold hardware */
+  --brass:         #9C7A3E;   /* brass nailhead 42 */
+  --nickel-bright: #B8BBBF;   /* bright nickel hardware */
+  --nickel-brush:  #9A9DA0;   /* brushed nickel hardware */
+  --pewter:        #7B7C80;   /* pewter nailhead 41 */
+  --gunmetal:      #4E5054;   /* gunmetal hardware */
+  --smoke:         #3F4146;   /* smoke nailhead 44 */
+  --old-brass:     #8E7945;   /* old brass nailhead 40 */
+
+  /* ============================================================
+     4) SUB-BRAND ACCENTS
+     Each brand tints toward a specific destination / mood.
+     ============================================================ */
+
+  /* LEXINGTON — classic, transitional. Charcoal + antique gold. */
+  --lex-ink:           #2F3138;
+  --lex-gold:          #B8A66A;
+  --lex-paper:         #FBF8F2;
+  --lex-rule:          #C7B98A;
+
+  /* TOMMY BAHAMA HOME — island, warm woods, raffia. */
+  --tbh-sand:          #D8C9A8;   /* raffia, woven texture */
+  --tbh-driftwood:     #A89274;   /* warm wood */
+  --tbh-tamarind:      #2A1F18;   /* the 619 Tamarind finish */
+  --tbh-cassis:        #6E3A26;   /* 621 Cassis accent */
+  --tbh-palm:          #3D4A36;   /* deep palm green */
+  --tbh-ocean:         #4A6A78;   /* gulf-shore blue */
+  --tbh-ink:           #1F1B16;
+
+  /* TOMMY BAHAMA OUTDOOR — aged iron, driftwood gray, sea. */
+  --tbo-aged-iron:     #3D3F44;
+  --tbo-driftwood:     #8A8378;
+  --tbo-weatherstone:  #C7C2B8;
+  --tbo-sea:           #5E7E84;
+  --tbo-ink:           #25272C;
+
+  /* BARCLAY BUTERA — California coastal meets East Coast traditional. */
+  --bb-ivory:          #F1E9DA;
+  --bb-linen:          #E2D8C2;
+  --bb-coast:          #6F8FA0;   /* Crystal Cove, La Jolla blue */
+  --bb-deep:           #2D3D49;   /* deep navy ground */
+  --bb-coral:          #C97B6A;   /* Goldenrod / coral accent */
+  --bb-meadow:         #7E8C5F;   /* soft meadow green */
+  --bb-ink:            #1E1F22;
+
+  /* ARTISTICA HOME — contemporary luxury, metalwork, sculptural. */
+  --art-ink:           #0F0F11;
+  --art-bronze:        #6B4A2E;
+  --art-brass:         #8C6F3B;
+  --art-stone:         #C4BFB5;
+  --art-shadow:        #16161A;
+
+  /* SLIGH — heritage office, executive, leather + ink. */
+  --sligh-ink:         #1B1A18;
+  --sligh-leather:     #5A3B26;
+  --sligh-oxblood:     #5C2A26;
+  --sligh-paper:       #EEE7D6;
+  --sligh-rule:        #9C7F4A;
+
+  /* ============================================================
+     5) SEMANTIC TOKENS — "what does it mean" wrappers
+     Components should reference these, not raw palette.
+     ============================================================ */
+
+  --bg-canvas:       var(--paper);
+  --bg-surface:      var(--white);
+  --bg-sunken:       var(--ink-10);
+  --bg-inverse:      var(--ink-90);
+
+  --fg-default:      var(--ink-90);
+  --fg-muted:        var(--ink-60);
+  --fg-subtle:       var(--ink-50);
+  --fg-on-inverse:   var(--ink-05);
+  --fg-accent:       var(--gold-antique);
+
+  --rule-hair:       var(--ink-40);
+  --rule-soft:       var(--ink-30);
+  --rule-emphasis:   var(--ink-80);
+  --rule-gold:       var(--lex-rule);
+
+  --focus-ring:      color-mix(in oklab, var(--gold-antique) 60%, transparent);
+
+  /* ============================================================
+     6) TYPE SYSTEM
+     Three families used across the portfolio:
+       - Display Serif (Cinzel)        → all-caps titles, wordmarks
+       - Editorial Serif (Cormorant)   → headlines, body, lead copy
+       - Sans (Inter)                  → utilitarian UI, dimensions, SKUs
+       - Script (Pinyon Script)        → Tommy Bahama wordmark substitute
+       - Slab (Zilla Slab)             → "HOME", "OUTDOOR LIVING" subtags
+     ------------------------------------------------------------ */
+
+  --font-display:     "Cinzel", "Trajan Pro", "Cormorant Garamond", Georgia, serif;
+  --font-editorial:   "Cormorant Garamond", "EB Garamond", "Hoefler Text", Georgia, serif;
+  --font-body:        "EB Garamond", "Cormorant Garamond", Georgia, serif;
+  --font-ui:          "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-script:      "Pinyon Script", "Petit Formal Script", "Apple Chancery", cursive;
+  --font-slab:        "Zilla Slab", "Rockwell", Georgia, serif;
+
+  /* Scale — generous, editorial. 1.250 minor third. */
+  --size-display-xl:  88px;
+  --size-display:     64px;
+  --size-h1:          48px;
+  --size-h2:          36px;
+  --size-h3:          28px;
+  --size-h4:          22px;
+  --size-lead:        20px;
+  --size-body:        16px;
+  --size-small:       14px;
+  --size-eyebrow:     12px;     /* tracked all-caps labels */
+  --size-spec:        11px;     /* dim/SKU lines */
+
+  --line-tight:       1.05;
+  --line-snug:        1.2;
+  --line-body:        1.55;
+  --line-loose:       1.75;
+
+  --track-display:    0.16em;   /* heavy tracking on caps display */
+  --track-eyebrow:    0.22em;
+  --track-tight:      0.02em;
+  --track-body:       0.005em;
+
+  /* ============================================================
+     7) SPACING, RADII, SHADOWS
+     Editorial, paper-like. Almost no rounded corners.
+     ============================================================ */
+
+  --s-1:    4px;
+  --s-2:    8px;
+  --s-3:    12px;
+  --s-4:    16px;
+  --s-5:    24px;
+  --s-6:    32px;
+  --s-7:    48px;
+  --s-8:    64px;
+  --s-9:    96px;
+  --s-10:  128px;
+
+  --radius-none:   0px;
+  --radius-soft:   2px;     /* very subtle */
+  --radius-card:   4px;     /* card max */
+  --radius-pill:   999px;   /* reserved for tags */
+
+  /* Shadows are restrained, more print "drop" than UI elevation */
+  --shadow-1: 0 1px 2px rgba(31,27,22,0.04), 0 1px 1px rgba(31,27,22,0.03);
+  --shadow-2: 0 6px 18px rgba(31,27,22,0.08), 0 2px 4px rgba(31,27,22,0.04);
+  --shadow-3: 0 18px 50px rgba(31,27,22,0.12), 0 6px 12px rgba(31,27,22,0.06);
+  --shadow-print: 0 1px 0 rgba(31,27,22,0.06), 0 30px 60px -20px rgba(31,27,22,0.18);
+  --shadow-inset-rule: inset 0 -1px 0 var(--rule-hair);
+
+  /* Motion — slow, considered. No bounces. */
+  --ease-quiet:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-editorial: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:      160ms;
+  --dur-base:      240ms;
+  --dur-slow:      420ms;
+}
+
+/* ============================================================
+   8) BASE ELEMENTS — generic semantic mappings
+   Pages can opt-in by adding .lhb-doc to <body> or a wrapper.
+   ============================================================ */
+
+.lhb-doc {
+  color: var(--fg-default);
+  background: var(--bg-canvas);
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: var(--line-body);
+  letter-spacing: var(--track-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.lhb-doc h1, .lhb-h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--size-h1);
+  line-height: var(--line-tight);
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  color: var(--ink-90);
+  margin: 0 0 var(--s-5) 0;
+}
+
+.lhb-doc h2, .lhb-h2 {
+  font-family: var(--font-editorial);
+  font-weight: 500;
+  font-style: italic;
+  font-size: var(--size-h2);
+  line-height: var(--line-snug);
+  letter-spacing: var(--track-tight);
+  color: var(--ink-80);
+  margin: 0 0 var(--s-4) 0;
+}
+
+.lhb-doc h3, .lhb-h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--size-h3);
+  line-height: var(--line-snug);
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  color: var(--ink-90);
+  margin: 0 0 var(--s-3) 0;
+}
+
+.lhb-doc h4, .lhb-h4 {
+  font-family: var(--font-editorial);
+  font-weight: 600;
+  font-size: var(--size-h4);
+  line-height: var(--line-snug);
+  color: var(--ink-90);
+  margin: 0 0 var(--s-3) 0;
+}
+
+.lhb-doc p, .lhb-body {
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: var(--line-body);
+  color: var(--ink-80);
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+
+.lhb-lead {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: var(--size-lead);
+  line-height: var(--line-body);
+  color: var(--ink-80);
+  max-width: 56ch;
+}
+
+.lhb-eyebrow {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--size-eyebrow);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-60);
+}
+
+.lhb-spec {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--size-spec);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-60);
+}
+
+.lhb-wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  color: var(--ink-80);
+}
+
+.lhb-script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  color: var(--ink-90);
+}
+
+.lhb-rule {
+  border: 0;
+  border-top: 1px solid var(--rule-hair);
+}
+.lhb-rule--gold {
+  border-top: 1px solid var(--rule-gold);
+}
+.lhb-rule--double {
+  border: 0;
+  border-top: 1px solid var(--ink-80);
+  border-bottom: 1px solid var(--ink-80);
+  height: 4px;
+}

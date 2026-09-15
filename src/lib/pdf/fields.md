@@ -1,0 +1,350 @@
+# AcroForm fields per template
+
+## public/forms/credit-application.pdf
+
+- `I AM Name` TextField p1 [94,577 165x17]
+- `I AM` TextField p1 [292,577 112x17]
+- `Date` TextField p1 [433,577 135x17]
+- `Legal Company Name` TextField p1 [146,550 258x19]
+- `Acct` TextField p1 [441,550 126x19]
+- `DBATA` TextField p1 [87,530 317x19]
+- `County` TextField p1 [444,530 123x19]
+- `Business Address` TextField p1 [127,509 441x19]
+- `City` TextField p1 [67,489 192x19]
+- `State or Province` TextField p1 [343,489 225x19]
+- `Country` TextField p1 [86,469 100x19]
+- `Postal Code` TextField p1 [247,469 84x19]
+- `Email` TextField p1 [363,469 205x19]
+- `Phone` TextField p1 [86,449 173x19]
+- `Fax` TextField p1 [291,449 276x19]
+- `Proprietorship` CheckBox p1 [116,414 10x7] on=/On
+- `Partnership` CheckBox p1 [219,414 10x7] on=/On
+- `Corporation` CheckBox p1 [306,414 10x7] on=/On
+- `LLC` CheckBox p1 [401,414 10x7] on=/On
+- `SubS` CheckBox p1 [459,414 10x7] on=/On
+- `Owners` TextField p1 [161,388 170x19]
+- `Phone_2` TextField p1 [376,388 191x19]
+- `President` TextField p1 [165,367 167x19]
+- `Phone_3` TextField p1 [376,367 191x19]
+- `AP Manager` TextField p1 [176,347 156x19]
+- `Phone_4` TextField p1 [376,347 191x19]
+- `Buyer` TextField p1 [148,327 183x19]
+- `Phone_5` TextField p1 [376,327 191x19]
+- `Type of Business` TextField p1 [126,299 206x19]
+- `Date business started` TextField p1 [437,299 130x19]
+- `Fiscal Year End` TextField p1 [117,278 215x20]
+- `Estimated Annual Sales` TextField p1 [447,278 120x20]
+- `DB` TextField p1 [72,250 114x20]
+- `Parent DB` TextField p1 [250,250 154x20]
+- `Lyons` TextField p1 [441,250 126x20]
+- `Signature` Signature p1 [97,92 304x25]
+- `Printed Name` TextField p1 [117,66 215x25]
+- `Title` TextField p1 [375,66 189x25]
+- `Location Name` TextField p2 [116,714 288x20]
+- `Attention` TextField p2 [455,714 112x20]
+- `Address` TextField p2 [86,693 318x20]
+- `Phone_6` TextField p2 [449,693 119x20]
+- `City_2` TextField p2 [67,672 192x20]
+- `State` TextField p2 [291,672 113x20]
+- `Postal Code_2` TextField p2 [465,672 103x20]
+- `Province` TextField p2 [233,651 171x20]
+- `Country_2` TextField p2 [448,651 119x20]
+- `Location Name_2` TextField p2 [116,556 288x20]
+- `Attention_2` TextField p2 [455,556 112x20]
+- `Address_2` TextField p2 [86,535 318x20]
+- `Phone_7` TextField p2 [449,535 119x20]
+- `City_3` TextField p2 [67,514 192x20]
+- `State_2` TextField p2 [291,514 113x20]
+- `Postal Code_3` TextField p2 [465,514 103x20]
+- `Province_2` TextField p2 [233,492 171x20]
+- `Country_3` TextField p2 [448,492 119x20]
+- `Name` TextField p2 [75,442 329x20]
+- `Title_2` TextField p2 [431,442 136x20]
+- `Ema i l Addresss` TextField p2 [117,420 287x20]
+- `Phone_8` TextField p2 [449,420 119x20]
+- `Shipping Name` TextField p2 [116,369 288x20]
+- `Attention_3` TextField p2 [456,369 112x20]
+- `Address_3` TextField p2 [86,348 318x20]
+- `Phone_9` TextField p2 [449,348 119x20]
+- `City_4` TextField p2 [67,327 192x20]
+- `State_3` TextField p2 [291,327 113x20]
+- `Postal Code_4` TextField p2 [465,327 103x20]
+- `Province_3` TextField p2 [233,306 171x20]
+- `Country_4` TextField p2 [448,306 119x20]
+- `stribution Center` RadioGroup p2 [500,290 10x7] opts=["Yes","No"]
+- `Sunday` TextField p2 [44,202 70x29]
+- `Monday` TextField p2 [116,202 70x29]
+- `Tuesday` TextField p2 [189,202 70x29]
+- `Wednesday` TextField p2 [261,202 70x29]
+- `Thursday` TextField p2 [334,202 70x29]
+- `Friday` TextField p2 [406,202 79x29]
+- `Saturday` TextField p2 [489,202 79x29]
+- `LFI Freight Program attach s` CheckBox p2 [262,179 10x7] on=/On
+- `Preferred Carrier` CheckBox p2 [262,162 10x7] on=/On
+- `icant has read understands and agrees to the LHBArtistica Home Sales Policy` RadioGroup p2 [465,132 11x8] opts=["Yes_2","No_2"]
+- `Approved by` TextField p2 [114,88 283x29]
+- `Date_2` TextField p2 [437,88 111x29]
+- `SalesExemptTax#` TextField p1 [167,428 181x19]
+- `emailaddress` TextField p2 [112,616 455x22]
+- `open` TextField p2 [160,284 56x20]
+- `close` TextField p2 [231,284 110x20]
+
+## public/forms/credit-card-transaction.pdf
+
+- `Mastercard Check Box` CheckBox p1 [121,657 18x18] on=/Yes
+- `Visa Check Box` CheckBox p1 [212,657 18x18] on=/Yes
+- `Discover Check Box` CheckBox p1 [276,656 18x18] on=/Yes
+- `Amex Check Box` CheckBox p1 [352,656 18x18] on=/Yes
+- `Expiration Date` TextField p1 [445,626 48x22]
+- `Verification Code` TextField p1 [174,599 55x22]
+- `Customer Code` TextField p1 [138,573 49x22]
+- `Account Name` TextField p1 [357,401 191x23]
+- `Caller Name` TextField p1 [292,352 256x23]
+- `Taken By Name` TextField p1 [117,329 150x22]
+- `Taken By Date` TextField p1 [342,327 206x23]
+- `Acknowledgement #` TextField p1 [172,252 142x25]
+- `Invoice #` TextField p1 [376,252 172x25]
+- `Account Number` TextField p1 [170,402 110x23]
+- `Card Holder Name` TextField p1 [192,546 356x23]
+- `Cardholder Address` TextField p1 [166,519 382x25]
+- `City` TextField p1 [95,490 192x26]
+- `State` TextField p1 [321,490 47x26]
+- `Postal Code` TextField p1 [431,490 117x26]
+- `Amount to be charged` TextField p1 [171,463 116x26]
+- `Completed by` TextField p1 [355,463 193x26]
+- `Remittance Advice` TextField p1 [161,377 387x23]
+- `Credit Card Number` TextField p1 [162,625 206x26]
+
+## public/forms/di-credit-application.pdf
+
+- `IAM Name` TextField p1 [96,587 163x17]
+- `IAM` TextField p1 [294,587 110x17]
+- `Date` TextField p1 [435,587 132x17]
+- `Legal Company Name` TextField p1 [148,559 256x19]
+- `Acct` TextField p1 [444,559 123x19]
+- `DBATA` TextField p1 [90,539 314x19]
+- `County` TextField p1 [446,539 122x19]
+- `Business Address` TextField p1 [129,519 438x19]
+- `City` TextField p1 [70,499 189x18]
+- `State` TextField p1 [294,499 109x19]
+- `Postal Code` TextField p1 [467,499 100x18]
+- `Phone` TextField p1 [87,478 172x19]
+- `Fax` TextField p1 [294,478 273x18]
+- `Proprietorship` CheckBox p1 [116,444 10x7] on=/On
+- `Partnership` CheckBox p1 [219,444 10x7] on=/On
+- `Corporation` CheckBox p1 [306,444 10x7] on=/On
+- `LLC` CheckBox p1 [401,444 10x7] on=/On
+- `SubS` CheckBox p1 [459,444 10x7] on=/On
+- `ApplicantOwners` TextField p1 [139,417 192x19]
+- `Phone_2` TextField p1 [378,418 189x18]
+- `Shipping Name` TextField p1 [118,329 285x19]
+- `Attention` TextField p1 [458,329 109x20]
+- `Address` TextField p1 [88,308 316x20]
+- `Phone_3` TextField p1 [450,308 117x20]
+- `City_2` TextField p1 [69,286 190x20]
+- `State_2` TextField p1 [293,286 111x20]
+- `Postal Code_2` TextField p1 [466,286 101x20]
+- `stribution Center` RadioGroup p1 [500,271 10x7] opts=["Yes","No"]
+- `Sunday` TextField p1 [44,182 70x29]
+- `Monday` TextField p1 [116,182 70x29]
+- `Tuesday` TextField p1 [189,182 70x29]
+- `Wednesday` TextField p1 [261,182 70x29]
+- `Thursday` TextField p1 [334,182 70x29]
+- `Friday` TextField p1 [406,182 79x29]
+- `Saturday` TextField p1 [489,182 79x29]
+- `LFI Freight Program attach s` CheckBox p1 [262,159 10x7] on=/On
+- `Preferred Carrier` CheckBox p1 [262,142 10x7] on=/On
+- `icant has read understands and agrees to the LHB Sales Policy` RadioGroup p1 [385,111 11x8] opts=["Yes_2","No_2"]
+- `SalesTaxExempt` TextField p1 [168,459 180x18]
+- `email_address` TextField p1 [112,381 454x21]
+- `AM` TextField p1 [160,264 46x22]
+- `PM` TextField p1 [221,263 99x23]
+- `Holidays` TextField p1 [96,226 471x22]
+- `Preferred_Freight_Carrier` TextField p1 [357,136 210x20]
+
+## public/forms/e595e.pdf
+
+- `Check Box 1` CheckBox p1 [87,583 17x16] on=/Yes
+- `State1` Dropdown p1 [67,566 36x15] opts=[" ","AK","AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
+- `Check Box 2` CheckBox p1 [87,542 17x15] on=/Yes
+- `Purchase Order #` TextField p1 [482,545 87x20]
+- `Name of Purchaser` TextField p1 [71,496 504x17]
+- `Business Address` TextField p1 [71,469 248x18]
+- `City` TextField p1 [325,469 137x18]
+- `State2` Dropdown p1 [467,469 31x18] opts=[" ","AK","AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
+- `Zip Code` TextField p1 [521,469 54x18]
+- `Tax ID Number` TextField p1 [71,442 248x18]
+- `State3` Dropdown p1 [325,442 42x18] opts=[" ","AK","AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
+- `Country` TextField p1 [468,442 108x18]
+- `FEIN` TextField p1 [166,415 90x18]
+- `State4` Dropdown p1 [303,415 31x18] opts=[" ","AK","AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
+- `Number` TextField p1 [362,415 96x18]
+- `Foreign Diplomat Number` TextField p1 [467,415 109x18]
+- `Name of Seller` TextField p1 [71,387 504x19]
+- `Seller's Address` TextField p1 [71,360 248x18]
+- `Seller's City` TextField p1 [325,360 137x18]
+- `State5` Dropdown p1 [467,360 31x18] opts=[" ","AK","AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
+- `Seller's Zip Code` TextField p1 [521,360 54x18]
+- `z_E-595Ewf_print` Button p1 [515,728 39x40]
+- `z_E595Ewf_clear` Button p1 [560,728 37x40]
+- `Type of Business 01` CheckBox p1 [68,326 17x13] on=/Yes
+- `Type of Business 02` CheckBox p1 [68,316 17x13] on=/Yes
+- `Type of Business 03` CheckBox p1 [68,305 17x14] on=/Yes
+- `Type of Business 04` CheckBox p1 [68,294 17x13] on=/Yes
+- `Type of Business 05` CheckBox p1 [68,283 17x14] on=/Yes
+- `Type of Business 06` CheckBox p1 [68,272 17x14] on=/Yes
+- `Type of Business 07` CheckBox p1 [68,261 17x14] on=/Yes
+- `Type of Business 08` CheckBox p1 [68,251 17x13] on=/Yes
+- `Type of Business 09` CheckBox p1 [68,240 17x13] on=/Yes
+- `Type of Business 10` CheckBox p1 [68,229 17x13] on=/Yes
+- `Type of Business 11` CheckBox p1 [322,326 17x13] on=/Yes
+- `Type of Business 12` CheckBox p1 [322,316 17x13] on=/Yes
+- `Type of Business 13` CheckBox p1 [322,305 17x13] on=/Yes
+- `Type of Business 14` CheckBox p1 [322,294 17x13] on=/Yes
+- `Type of Business 15` CheckBox p1 [322,283 17x13] on=/Yes
+- `Type of Business 16` CheckBox p1 [322,272 17x13] on=/Yes
+- `Type of Business 17` CheckBox p1 [322,262 17x13] on=/Yes
+- `Type of Business 18` CheckBox p1 [322,251 17x13] on=/Yes
+- `Type of Business 19` CheckBox p1 [322,240 17x13] on=/Yes
+- `Type of Business 20` CheckBox p1 [322,229 17x13] on=/Yes
+- `Other` TextField p1 [417,231 159x19]
+- `Reason for Exemption A` CheckBox p1 [68,194 17x17] on=/Yes
+- `A` TextField p1 [237,198 78x14]
+- `Reason for Exemption B` CheckBox p1 [68,182 17x17] on=/Yes
+- `B` TextField p1 [237,183 78x14]
+- `Reason for Exemption C` CheckBox p1 [68,168 17x17] on=/Yes
+- `C` TextField p1 [207,171 108x14]
+- `Reason for Exemption D` CheckBox p1 [68,156 17x17] on=/Yes
+- `D` TextField p1 [182,157 133x14]
+- `Reason for Exemption G` CheckBox p1 [68,117 17x17] on=/Yes
+- `G` TextField p1 [145,120 170x14]
+- `Reason for Exemption H` CheckBox p1 [321,194 18x17] on=/Yes
+- `H` TextField p1 [457,198 119x14]
+- `Reason for Exemption I` CheckBox p1 [321,181 18x17] on=/Yes
+- `I` TextField p1 [509,185 67x14]
+- `Reason for Exemption J` CheckBox p1 [321,168 18x17] on=/Yes
+- `J` TextField p1 [436,172 140x14]
+- `Reason for Exemption K` CheckBox p1 [321,155 18x17] on=/Yes
+- `K` TextField p1 [409,159 167x16]
+- `Reason for Exemption L` CheckBox p1 [321,143 18x16] on=/Yes
+- `L` TextField p1 [415,146 161x16]
+- `L3` TextField p1 [326,120 250x14]
+- `Title 2` TextField p1 [433,65 74x17]
+- `Date2` TextField p1 [513,65 63x17]
+- `Name of Purchaser2` TextField p2 [35,650 506x17]
+- `Reason for exemptionIA` TextField p2 [144,560 181x13]
+- `Identification numberIA` TextField p2 [359,560 181x13]
+- `Reason for exemptionIN` TextField p2 [144,543 181x13]
+- `Identification numberIN` TextField p2 [359,543 181x13]
+- `Reason for exemptionKS` TextField p2 [144,527 181x13]
+- `Identification numberKS` TextField p2 [359,527 181x13]
+- `Reason for exemptionKY` TextField p2 [144,511 181x13]
+- `Identification numberKY` TextField p2 [359,511 181x13]
+- `Reason for exemptionMI` TextField p2 [144,494 181x13]
+- `Identification numberMI` TextField p2 [359,494 181x13]
+- `Reason for exemptionMN` TextField p2 [144,478 181x13]
+- `Identification numberMN` TextField p2 [359,478 181x13]
+- `Reason for exemptionNC` TextField p2 [144,461 181x13]
+- `Identification numberNC` TextField p2 [359,461 181x13]
+- `Reason for exemptionND` TextField p2 [144,446 181x13]
+- `Identification numberND` TextField p2 [359,446 181x13]
+- `Reason for exemptionNE` TextField p2 [144,429 181x13]
+- `Identification numberNE` TextField p2 [359,429 181x13]
+- `Reason for exemptionNJ` TextField p2 [144,413 181x13]
+- `Identification numberNJ` TextField p2 [359,413 181x13]
+- `Reason for exemptionNV` TextField p2 [144,397 181x13]
+- `Identification numberNV` TextField p2 [359,397 181x13]
+- `Reason for exemptionRI` TextField p2 [144,348 181x13]
+- `Identification numberRI` TextField p2 [359,348 181x13]
+- `Reason for exemptionSD` TextField p2 [144,331 181x13]
+- `Identification numberSD` TextField p2 [359,331 181x13]
+- `Reason for exemptionTN` TextField p2 [144,315 181x13]
+- `Identification numberTN` TextField p2 [359,315 181x13]
+- `Reason for exemptionUT` TextField p2 [144,299 181x13]
+- `Identification numberUT` TextField p2 [359,299 181x13]
+- `Reason for exemptionWV` TextField p2 [144,234 181x13]
+- `Identification numberWV` TextField p2 [359,234 181x13]
+- `Reason for exemptionWY` TextField p2 [144,218 181x13]
+- `Identification numberWY` TextField p2 [359,218 181x13]
+- `Reason for exemptionAR` TextField p2 [144,592 181x13]
+- `Identification numberAR` TextField p2 [359,592 181x13]
+- `Reason for exemptionGA` TextField p2 [143,576 181x13]
+- `Identification numberGA` TextField p2 [358,576 181x13]
+- `Reason for exemptionOH` TextField p2 [144,381 181x13]
+- `Identification numberOH` TextField p2 [359,381 181x13]
+- `Reason for exemptionOK` TextField p2 [143,365 181x13]
+- `Identification numberOK` TextField p2 [358,365 181x13]
+- `Reason for exemptionVT` TextField p2 [144,283 181x13]
+- `Identification numberVT` TextField p2 [359,283 181x13]
+- `Reason for exemptionWA` TextField p2 [143,266 181x13]
+- `Identification numberWA` TextField p2 [358,266 181x13]
+- `Reason for exemptionWI` TextField p2 [143,250 181x13]
+- `Identification numberWI` TextField p2 [358,250 181x13]
+- `Print Name` TextField p1 [270,65 156x17]
+- `PhoneNumber` TextField p1 [71,36 156x17]
+- `E-mailAdress` TextField p1 [270,36 306x17]
+
+## public/forms/prepaid-freight-2026.pdf
+
+
+## rep-forms/new-account-checklist.pdf
+
+- `Account Name` TextField p1 [94,705 303x20]
+- `Acct` TextField p1 [432,705 134x20]
+- `Address` TextField p1 [63,683 502x20]
+- `City` TextField p1 [45,661 197x20]
+- `Posta Code` TextField p1 [302,661 95x20]
+- `County` TextField p1 [438,661 128x20]
+- `State or Prov i nce` TextField p1 [106,640 291x20]
+- `Country` TextField p1 [442,640 124x20]
+- `undefined` CheckBox p1 [168,623 12x10] on=/On
+- `undefined_2` CheckBox p1 [228,623 12x10] on=/On
+- `I` CheckBox p1 [142,578 12x10] on=/On
+- `Preferred Des` CheckBox p1 [142,561 12x10] on=/On
+- `I_2` CheckBox p1 [142,543 12x10] on=/On
+- `Government` CheckBox p1 [142,526 12x10] on=/On
+- `Agent` CheckBox p1 [142,508 12x10] on=/On
+- `GOB Consol` CheckBox p1 [142,491 12x10] on=/On
+- `I_3` CheckBox p1 [245,578 12x10] on=/On
+- `Des` CheckBox p1 [245,561 12x10] on=/On
+- `Model Home Bui` CheckBox p1 [245,526 12x10] on=/On
+- `Contract` CheckBox p1 [245,508 12x10] on=/On
+- `Transit DamagedSalvageL` CheckBox p1 [245,491 12x10] on=/On
+- `Outdoor Retailer` CheckBox p1 [401,578 12x10] on=/On
+- `Decorator` CheckBox p1 [401,561 12x10] on=/On
+- `Hospita` CheckBox p1 [401,526 12x10] on=/On
+- `Des_2` CheckBox p1 [245,423 12x10] on=/On
+- `Who` CheckBox p1 [245,406 12x10] on=/On
+- `Who_2` CheckBox p1 [245,388 12x10] on=/On
+- `Who_3` CheckBox p1 [245,371 12x10] on=/On
+- `Who_4` CheckBox p1 [245,354 12x10] on=/On
+- `Wholesale` CheckBox p1 [142,423 12x10] on=/On
+- `Stocking Dea` CheckBox p1 [142,406 12x10] on=/On
+- `Program` CheckBox p1 [142,388 12x10] on=/On
+- `Program_2` CheckBox p1 [142,371 12x10] on=/On
+- `Program_3` CheckBox p1 [142,354 12x10] on=/On
+- `Program_4` CheckBox p1 [142,336 12x10] on=/On
+- `Program_5` CheckBox p1 [142,319 12x10] on=/On
+- `Des_3` CheckBox p1 [401,388 12x10] on=/On
+- `Des_4` CheckBox p1 [401,354 12x10] on=/On
+- `Decorator_2` CheckBox p1 [482,423 12x10] on=/On
+- `Decorator_3` CheckBox p1 [482,406 12x10] on=/On
+- `Decorator_4` CheckBox p1 [482,388 12x10] on=/On
+- `Decorator_5` CheckBox p1 [482,371 12x10] on=/On
+- `Decorator_6` CheckBox p1 [482,354 12x10] on=/On
+- `Complete the above and email newaccountlexingtoncom or fax 3364745704 for approval` TextField p1 [140,254 226x28]
+- `Date` TextField p1 [415,254 66x28]
+- `Credit App` CheckBox p1 [142,179 12x10] on=/On
+- `I_4` CheckBox p1 [142,161 12x10] on=/On
+- `B` CheckBox p1 [142,140 12x10] on=/On
+- `Comp` CheckBox p1 [142,123 12x10] on=/On
+- `Freight Program Details  Agreement Form` CheckBox p1 [142,105 12x10] on=/On
+- `LHB Po` CheckBox p1 [142,88 12x10] on=/On
+- `List of Major Supp` CheckBox p1 [245,179 12x10] on=/On
+- `Financ` CheckBox p1 [401,179 12x10] on=/On
+- `Sh` CheckBox p1 [245,140 12x10] on=/On
+- `Part` CheckBox p1 [245,123 12x10] on=/On
+- `Market` CheckBox p1 [401,140 12x10] on=/On
+- `DamageShortage C` CheckBox p1 [401,105 12x10] on=/On
+- `Web Dea` CheckBox p1 [401,88 12x10] on=/On
+

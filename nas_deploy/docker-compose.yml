@@ -1,0 +1,19 @@
+# Lexington New Account — REP TOOLS on the UGREEN DXP4800 (Tailscale only).
+#
+# Folder layout expected on the NAS:
+#
+#   /volume1/docker/lexington-onboarding-rep/
+#     ├─ docker-compose.yml   (this file)
+#     └─ app/                 (the rep build: index.html, rep.html, assets/, forms/, rep-forms/)
+#
+# Static files only; nothing is written. Do NOT port-forward 8634 on the router —
+# the rep checklist inside app/rep-forms/ is Lexington-internal.
+services:
+  lexington-onboarding-rep:
+    image: nginx:alpine
+    container_name: lexington-onboarding-rep
+    restart: unless-stopped
+    ports:
+      - "8634:80"
+    volumes:
+      - ./app:/usr/share/nginx/html:ro

@@ -1,0 +1,13 @@
+node_modules
+dist
+dist-rep
+.env
+.env.local
+
+# Rep-only material. Never in the public repo: the checklist is Lexington-internal
+# and the NAS bundle contains it.
+rep-forms/
+nas_deploy/app/
+brief/*.png
+tmp-packet/
+.claude/
