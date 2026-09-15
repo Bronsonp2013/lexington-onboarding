@@ -21,11 +21,17 @@ import { Review } from "./sections/Review.jsx";
 
 const COMPONENTS = { welcome: Welcome, company: Company, contacts: Contacts, addresses: Addresses, shipto: ShipTo, freight: Freight, tax: Tax, references: References, review: Review };
 
+// #demo, #demo-retail, optionally followed by /<section id> to open a step directly
+// (e.g. #demo/freight). Used for the corporate walkthrough and screenshots.
 function demoFromHash() {
-  const h = location.hash.replace("#", "");
+  const h = location.hash.replace("#", "").split("/")[0];
   if (h === "demo" || h === "demo-designer") return "designer";
   if (h === "demo-retail") return "retail";
   return "";
+}
+function stepFromHash() {
+  const parts = location.hash.replace("#", "").split("/");
+  return parts.length > 1 && parts[1] ? parts[1] : "";
 }
 
 export default function App() {
@@ -36,7 +42,7 @@ export default function App() {
     return loadDraft() || EMPTY_SUBMISSION();
   });
   const [stepId, setStepId] = useState(() => {
-    if (demoFromHash()) return "welcome";
+    if (demoFromHash()) return stepFromHash() || "welcome";
     try { return localStorage.getItem(KEY_STEP) || "welcome"; } catch { return "welcome"; }
   });
   const [showErrors, setShowErrors] = useState(false);
@@ -80,7 +86,7 @@ export default function App() {
   useEffect(() => {
     const onHash = () => {
       const kind = demoFromHash();
-      if (kind) { setDemo(kind); setData(loadSample(kind)); setStepId("welcome"); setRoute("form"); setResult(null); }
+      if (kind) { setDemo(kind); setData(loadSample(kind)); setStepId(stepFromHash() || "welcome"); setRoute("form"); setResult(null); }
       else if (location.hash === "#reset") { clearDraft(); setData(EMPTY_SUBMISSION()); setStepId("welcome"); setDemo(""); setRoute("form"); location.hash = ""; }
     };
     window.addEventListener("hashchange", onHash);

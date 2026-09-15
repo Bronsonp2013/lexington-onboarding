@@ -50,7 +50,8 @@ The customer build (`npm run build` → `dist/`) never includes `rep.html` or `r
 npm install
 npm run dev            # http://localhost:5173  (add #demo or #demo-retail for sample data)
 npm run build          # customer site → dist/
-npm run build:rep      # local rep tools → dist-rep/ (do not publish)
+npm run build:rep      # rep tools → dist-rep/ (do not publish)
+npm run bundle:rep     # rep tools → nas_deploy/ for the NAS
 npm run fields         # dump AcroForm field names of every template to src/lib/pdf/fields.md
 node scripts/test-packet.mjs <dir>     # build both sample packets in Node for inspection
 node scripts/test-checklist.mjs <dir>  # fill the rep checklist for both samples
@@ -69,9 +70,27 @@ Copy `.env.example` to `.env`:
 
 Free-plan limits that shaped the design: one attachment per submission, 5 MB max. Uploads are capped at 3 MB; the filled PDFs total roughly 750 KB.
 
+## Where it runs
+
+| What | URL |
+|---|---|
+| Customer application | https://bronsonp2013.github.io/lexington-onboarding/ |
+| Corporate demo (sample data, nothing sent) | https://bronsonp2013.github.io/lexington-onboarding/#demo · `#demo-retail` · add `/<step>` to open a step, e.g. `#demo/freight` |
+| Rep tools (NAS, Tailscale only) | http://ugreen-nas:8634/rep.html |
+| Repo | https://github.com/Bronsonp2013/lexington-onboarding |
+
 ## Deploying
 
-`dist/` is a static site. Drag the folder onto Netlify Drop or a Cloudflare Pages project, or point either at this repo with build command `npm run build` and output `dist`. Send prospects the site URL; send corporate the same URL with `#demo` (designer sample) or `#demo-retail`.
+**Customer site.** Every push to `main` runs `.github/workflows/deploy.yml`: it builds with `VITE_BASE=/lexington-onboarding/`, guards that no rep-only file is in `dist`, and publishes to GitHub Pages. Secrets and variables live on the repo:
+
+```bash
+gh secret set VITE_WEB3FORMS_KEY --repo Bronsonp2013/lexington-onboarding      # email delivery
+gh variable set VITE_SALES_POLICY_URL --repo Bronsonp2013/lexington-onboarding --body "https://…"
+gh variable set VITE_CAPTCHA --repo Bronsonp2013/lexington-onboarding --body on   # optional hCaptcha
+gh workflow run deploy.yml --repo Bronsonp2013/lexington-onboarding              # redeploy after changing them
+```
+
+**Rep tools.** `npm run bundle:rep` fills `nas_deploy/`; copy it to the NAS as described in `nas_deploy/README_NAS_SETUP.md`. The rep checklist template is git-ignored on purpose and travels only in that bundle.
 
 ## Templates
 
