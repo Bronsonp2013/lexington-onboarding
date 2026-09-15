@@ -53,7 +53,7 @@ npm run build          # customer site → dist/
 npm run build:rep      # rep tools → dist-rep/ (do not publish)
 npm run bundle:rep     # rep tools → nas_deploy/ for the NAS
 npm run fields         # dump AcroForm field names of every template to src/lib/pdf/fields.md
-node scripts/test-packet.mjs <dir>     # build both sample packets in Node for inspection
+npm run test:packet                    # build every sample case into tmp-packet/ for inspection
 node scripts/test-checklist.mjs <dir>  # fill the rep checklist for both samples
 node scripts/render.mjs <pdf> <prefix> [pages]  # render pages to PNG with MuPDF
 ```
@@ -102,4 +102,4 @@ gh workflow run deploy.yml --repo Bronsonp2013/lexington-onboarding             
 2. Lexington-branded retailer Credit Application PDF (blank).
 3. LHB Sales Policy link or PDF.
 4. IAM number (entered once in rep tools).
-5. A hosting account, or hand-off of `dist/`.
+5. Copy `nas_deploy/` to the NAS (`docker/lexington-onboarding-rep/`) and press Up, or share SSH access.
