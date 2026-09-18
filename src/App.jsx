@@ -133,20 +133,22 @@ export default function App() {
     try {
       const { buildPacket } = await import("./lib/packet.js");
       const packet = await buildPacket(d, files, {}, (label) => setBusy(label));
-      let delivered = false, error = "";
+      let delivered = false, error = "", steps = [];
       if (!demo && deliveryConfigured()) {
         setBusy("Sending to your representative");
         try {
           const { submitPacket } = await import("./lib/submit.js");
-          const token = CONFIG.captcha && window.hcaptcha ? window.hcaptcha.getResponse() : "";
-          await submitPacket(d, packet, { captchaToken: token });
+          const res = await submitPacket(d, packet);
+          steps = res.steps || [];
           delivered = true;
         } catch (e) { error = e.message; }
       }
       setData(d);
-      setResult({ packet, delivered, error, configured: deliveryConfigured() });
+      setResult({ packet, delivered, error, steps, configured: deliveryConfigured() });
       setRoute("submitted");
-      if (!demo) { clearDraft(); fileStore.clear(); }
+      // The draft is cleared only once the endpoint has confirmed; a failed delivery keeps
+      // everything so the customer can retry or download and email the packet.
+      if (!demo && delivered) { clearDraft(); fileStore.clear(); }
       scrollTop();
     } catch (e) {
       alert(`Something went wrong while preparing the forms: ${e.message}`);
@@ -252,8 +254,6 @@ export default function App() {
                 <div style={{ marginTop: 24 }}><Notice warn title="A few things are missing">Please complete the highlighted fields before continuing.</Notice></div>
               ) : null}
 
-              {isLast && CONFIG.captcha && !demo ? <div className="h-captcha" data-captcha="true" style={{ marginTop: 24 }} /> : null}
-
               <footer className="card-footer">
                 <button type="button" className="btn" onClick={prev} disabled={stepIdx === 0}>Back</button>
                 <span className="count">{current.kicker === "Start" ? "Start" : `Section ${stepIdx} of ${sections.length - 1}`}</span>
@@ -291,9 +291,12 @@ function loadSample(kind) {
   return d;
 }
 
+const STEP_LABELS = { sheet: "Application recorded", drive: "Forms filed", email: "Sent to your representative", task: "Follow-up scheduled" };
+
 function Success({ d, result, demo, onStartOver }) {
-  const { packet, delivered, error, configured } = result;
+  const { packet, delivered, error, configured, steps = [] } = result;
   const first = REP.name.split(" ")[0];
+  const partial = delivered && steps.some((s) => !s.ok);
   return (
     <div className="success">
       <span className="eyebrow">{demo ? "Demonstration complete" : delivered ? "Application sent" : "Application prepared"}</span>
@@ -314,6 +317,18 @@ function Success({ d, result, demo, onStartOver }) {
         </div>
       ) : null}
       <div className="id">{d.meta.id}</div>
+      {delivered && steps.length ? (
+        <ul className="files" style={{ marginTop: 0 }}>
+          {steps.filter((s) => STEP_LABELS[s.step]).map((s) => (
+            <li key={s.step}><span>{STEP_LABELS[s.step]}</span><span className="mono" style={{ color: s.ok ? "var(--gold-burnish)" : "#8E3B1F" }}>{s.ok ? "Done" : "Not completed"}</span></li>
+          ))}
+        </ul>
+      ) : null}
+      {partial ? (
+        <div style={{ textAlign: "left", marginBottom: 18 }}>
+          <Notice warn title="One step did not complete">Your application was recorded. Please also download the packet below and email it to {REP.email} so nothing is missed.</Notice>
+        </div>
+      ) : null}
       <span className="eyebrow eyebrow--ink">Your packet</span>
       <ul className="files">
         {packet.files.map((f) => (

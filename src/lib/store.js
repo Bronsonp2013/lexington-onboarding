@@ -50,12 +50,14 @@ export function setPath(obj, path, value) {
   return out;
 }
 
+// Collision-safe: month prefix + base36 timestamp + 2 random chars, e.g. LHB-202609-MFQ3K8X2.
 export function makeId() {
   const t = new Date();
   const y = t.getFullYear();
   const m = String(t.getMonth() + 1).padStart(2, "0");
-  const n = Math.floor(1000 + Math.random() * 9000);
-  return `LHB-${y}${m}-${n}`;
+  const stamp = t.getTime().toString(36).toUpperCase().slice(-6);
+  const rand = Math.random().toString(36).toUpperCase().slice(2, 4);
+  return `LHB-${y}${m}-${stamp}${rand}`;
 }
 
 export const todayISO = () => {

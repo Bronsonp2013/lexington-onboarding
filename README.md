@@ -21,23 +21,47 @@ design-system token file in `03_RepTech/_skills/lexington-home-brands-design`).
 | Credit References | Retail only: major suppliers, financial statement upload, net-30 terms |
 | Review & Sign | Summary, sales policy acknowledgement, certification, drawn signature |
 
-## What Bronson receives
+## What happens on submit
 
-One zip (`LHB-New-Account-<Company>-<date>.zip`) attached to the Web3Forms email, plus the JSON in the email body:
+The browser builds the packet, then posts the CustomerRecord, the raw submission, and every
+file to the Google Apps Script endpoint (`gas/`). The script, running in Bronson's Google
+account, does the rest in one request:
 
-- `00 Application Summary` — branded one-document summary of every answer (for records / CRM)
+1. **Sheet** — upserts a row in the *Lexington New Accounts* sheet (tab `Applications`,
+   54 named columns plus `record_json`/`submission_json`) and rewrites the child rows in
+   `Contacts`, `Locations`, `Suppliers`. This is the CRM record and the queue Pathfinder imports from.
+2. **Drive** — files every PDF, the uploaded certificate, `customer_record.json`, and
+   `submission.json` in `Lexington New Accounts/<year>/<Company> — <id>/`.
+3. **Email** — sends the zipped packet from Gmail to BPrachyl@lexington.com, reply-to the applicant.
+4. **Task** — "Review packet" in the *Lexington Onboarding* Google Tasks list, due next day.
+5. **CRM adapter** — marks `pathfinder_sync = pending`. A direct Pathfinder push is a second target later.
+
+The packet contains:
+
+- `00 Application Summary` — branded one-document summary of every answer
 - `01 Interior Designer Credit Application` (LR022817) **or** `01 Credit Application` (LR062917 layout)
 - `02 E-595E Certificate of Exemption` — pages 1–2 filled and signed
 - `03 Prepaid Freight Program Agreement` (LR123125) — only when the customer opts in; page 2 filled and signed
 - `04 Credit Card Transaction Form` (designer path) — identity fields only; **card numbers are never collected**
 - `Attachment - Tax Certificate - …` and, for retail, `Attachment - Financial Statement - …`
-- `submission.json` — the full data record (includes the signature image)
+- `submission.json` — the raw form record (includes the signature image)
 
 Extra ship-to locations are appended to the credit application as an "Additional Ship-To Locations" page.
 
+### Workflow
+
+Stages: Application received → Packet reviewed → Sent to Lexington → Account number assigned →
+Welcome sent → First order. Changing the stage (rep tools, or editing the sheet) logs the change;
+*Sent to Lexington* creates a follow-up task five business days out; saving the account number
+creates a Gmail **draft** of the welcome email (template 06) and a task. Nothing is auto-sent.
+
+The data contract is `docs/CUSTOMER_RECORD.md`; the Pathfinder import spec lives in the vault
+under `03_RepTechPathfinderBuild_LogOnboarding Import Spec.md`.
+
 ## Rep tools (local only)
 
-`rep.html` opens the emailed zip or JSON, rebuilds the packet with the IAM number and account number
+`rep.html` shows the application inbox from the sheet (rep token required), advances the
+onboarding stage, records the Lexington account number, and can still open an emailed zip or JSON. It rebuilds the packet with the IAM number and account number
 stamped in, fills the rep-only **New Account Checklist** (LR041624) with suggested class and pricing
 tiers, and drafts the email to newaccount@lexington.com.
 
@@ -64,11 +88,11 @@ Windows note: `node_modules` is a junction to `C:\dev\lexington-onboarding\node_
 
 Copy `.env.example` to `.env`:
 
-- `VITE_WEB3FORMS_KEY` — access key from https://web3forms.com created with the receiving address (BPrachyl@lexington.com). Without it the app runs in download-only mode and tells the customer to email the zip.
+- `VITE_INGEST_URL` — the Apps Script web-app `/exec` URL (see `gas/README.md`). Without it
+  the app runs in download-only mode and tells the customer to email the zip.
 - `VITE_SALES_POLICY_URL` — link to the LHB Sales Policy shown on the review step.
-- `VITE_CAPTCHA=on` — adds hCaptcha to the submit step (supported on the Web3Forms free plan).
 
-Free-plan limits that shaped the design: one attachment per submission, 5 MB max. Uploads are capped at 3 MB; the filled PDFs total roughly 750 KB.
+Payloads are capped at 8 MB; uploads at 3 MB. The filled PDFs total roughly 750 KB.
 
 ## Where it runs
 
@@ -84,9 +108,8 @@ Free-plan limits that shaped the design: one attachment per submission, 5 MB max
 **Customer site.** Every push to `main` runs `.github/workflows/deploy.yml`: it builds with `VITE_BASE=/lexington-onboarding/`, guards that no rep-only file is in `dist`, and publishes to GitHub Pages. Secrets and variables live on the repo:
 
 ```bash
-gh secret set VITE_WEB3FORMS_KEY --repo Bronsonp2013/lexington-onboarding      # email delivery
+gh variable set VITE_INGEST_URL --repo Bronsonp2013/lexington-onboarding --body "https://script.google.com/macros/s/…/exec"
 gh variable set VITE_SALES_POLICY_URL --repo Bronsonp2013/lexington-onboarding --body "https://…"
-gh variable set VITE_CAPTCHA --repo Bronsonp2013/lexington-onboarding --body on   # optional hCaptcha
 gh workflow run deploy.yml --repo Bronsonp2013/lexington-onboarding              # redeploy after changing them
 ```
 
@@ -98,7 +121,7 @@ gh workflow run deploy.yml --repo Bronsonp2013/lexington-onboarding             
 
 ## Still needed from Bronson
 
-1. Web3Forms access key.
+1. Deploy the Apps Script once (`gas/README.md`) and send the `/exec` URL.
 2. Lexington-branded retailer Credit Application PDF (blank).
 3. LHB Sales Policy link or PDF.
 4. IAM number (entered once in rep tools).

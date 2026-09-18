@@ -28,9 +28,8 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /lexington-onboarding/
-          VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
+          VITE_INGEST_URL: ${{ vars.VITE_INGEST_URL }}
           VITE_SALES_POLICY_URL: ${{ vars.VITE_SALES_POLICY_URL }}
-          VITE_CAPTCHA: ${{ vars.VITE_CAPTCHA }}
       - name: Guard against rep-only files
         run: |
           if ls dist | grep -qi rep; then echo "rep files in dist"; exit 1; fi

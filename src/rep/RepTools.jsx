@@ -8,7 +8,10 @@ import { EMPTY_SUBMISSION } from "../data/schema.js";
 import { buildPacket, downloadBlob } from "../lib/packet.js";
 import { fillChecklist, CLASS_LABELS, PRICING, suggestedClass, suggestedPricing } from "../lib/pdf/checklist.js";
 import { Field, Input, Select, Checkbox, Notice, SubHead, Rule } from "../components/ui.jsx";
-import { joinAddr, cityLine, fmtDateLong, slug, todayISO } from "../lib/store.js";
+import { joinAddr, cityLine, fmtDateLong, slug } from "../lib/store.js";
+import { repCall } from "../lib/submit.js";
+import { STAGES } from "../lib/crmRecord.js";
+import { CONFIG } from "../config.js";
 
 const KEY_SETTINGS = "lhb-onboarding:rep:v1";
 const loadSettings = () => { try { return JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}"); } catch { return {}; } };
@@ -22,6 +25,62 @@ export default function RepTools() {
   const [sel, setSel] = useState({ customerClass: "", pricing: {}, accountNumber: "", policies: false, dealerLocator: false });
   const [note, setNote] = useState("");
   const [copied, setCopied] = useState(false);
+  const [inbox, setInbox] = useState(null);      // rows from the sheet
+  const [inboxRow, setInboxRow] = useState(null); // the row currently open
+  const [acctInput, setAcctInput] = useState("");
+  const ingestUrl = settings.ingestUrl || CONFIG.ingestUrl;
+  const stageLabel = (k) => STAGES.find(([s]) => s === k)?.[1] || k || "—";
+
+  async function loadInbox() {
+    setBusy("Loading applications");
+    try {
+      const res = await repCall("list", settings.repToken, {}, ingestUrl);
+      setInbox(res.applications || []);
+      setNote(res.applications?.length ? "" : "No applications recorded yet.");
+    } catch (e) { setNote(`Could not load the inbox: ${e.message}`); }
+    finally { setBusy(""); }
+  }
+
+  async function openFromInbox(row) {
+    setBusy("Opening application");
+    try {
+      const res = await repCall("get", settings.repToken, { application_id: row.application_id }, ingestUrl);
+      if (!res.submission) throw new Error("This row has no submission data.");
+      setUploads({});
+      setD(merge(res.submission));
+      setInboxRow(res.row);
+      setAcctInput(res.row.account_number || "");
+      setSel((s) => ({ ...s, accountNumber: res.row.account_number || "" }));
+      setFileName(`${row.legal_name} (from the sheet)`);
+      setNote("");
+    } catch (e) { setNote(`Could not open: ${e.message}`); }
+    finally { setBusy(""); }
+  }
+
+  async function setStage(status) {
+    if (!inboxRow) return;
+    setBusy("Updating stage");
+    try {
+      const res = await repCall("status", settings.repToken, { application_id: inboxRow.application_id, status }, ingestUrl);
+      setInboxRow((r) => ({ ...r, status: res.status }));
+      setInbox((rows) => rows?.map((r) => (r.application_id === inboxRow.application_id ? { ...r, status: res.status } : r)) || rows);
+      setNote(res.events?.length ? `Recorded: ${res.events.join(", ")}` : "Stage updated.");
+    } catch (e) { setNote(`Could not update: ${e.message}`); }
+    finally { setBusy(""); }
+  }
+
+  async function saveAccountNumber() {
+    if (!inboxRow) return;
+    setBusy("Saving account number");
+    try {
+      const res = await repCall("status", settings.repToken, { application_id: inboxRow.application_id, account_number: acctInput }, ingestUrl);
+      setInboxRow((r) => ({ ...r, status: res.status, account_number: res.account_number }));
+      setSel((s) => ({ ...s, accountNumber: res.account_number || "" }));
+      setInbox((rows) => rows?.map((r) => (r.application_id === inboxRow.application_id ? { ...r, status: res.status, account_number: res.account_number } : r)) || rows);
+      setNote(res.events?.includes("draft:welcome") ? "Account number saved. The welcome email is waiting as a draft in Gmail." : "Account number saved.");
+    } catch (e) { setNote(`Could not save: ${e.message}`); }
+    finally { setBusy(""); }
+  }
 
   async function copySummary() {
     const { toSummaryText } = await import("../lib/summaryText.js");
@@ -118,10 +177,30 @@ export default function RepTools() {
               <p className="small" style={{ marginTop: 10 }}>Use the zip from the application email, or its submission.json.</p>
             </div>
             <div className="sub" style={{ marginTop: 16 }}>
+              <SubHead right={<button type="button" className="btn quiet" onClick={loadInbox} disabled={!!busy}>{inbox ? "Refresh" : "Load"}</button>}>Application inbox</SubHead>
+              {!inbox ? <p className="small">Applications recorded in the Lexington New Accounts sheet.</p> : null}
+              {inbox ? (
+                <ul className="files" style={{ margin: 0 }}>
+                  {inbox.map((r) => (
+                    <li key={r.application_id} style={{ cursor: "pointer", display: "block" }} onClick={() => openFromInbox(r)}>
+                      <span style={{ display: "block" }}>{r.legal_name}</span>
+                      <span className="mono" style={{ display: "block", marginTop: 2 }}>{stageLabel(r.status)} · {String(r.submitted_at || "").slice(0, 10)}{r.account_number ? ` · #${r.account_number}` : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <div className="sub" style={{ marginTop: 16 }}>
               <SubHead>Your details</SubHead>
               <div className="grid">
                 <Field label="IAM number" span={12} hint="stamped on regenerated forms">
                   <Input value={settings.iam || ""} onChange={(v) => setSettings((s) => ({ ...s, iam: v }))} placeholder="not yet on file" />
+                </Field>
+                <Field label="Rep token" span={12} hint="from the Apps Script setup log">
+                  <Input value={settings.repToken || ""} onChange={(v) => setSettings((s) => ({ ...s, repToken: v }))} type="password" />
+                </Field>
+                <Field label="Endpoint URL" span={12} hint={CONFIG.ingestUrl ? "built in; override only if needed" : "Apps Script /exec URL"}>
+                  <Input value={settings.ingestUrl || ""} onChange={(v) => setSettings((s) => ({ ...s, ingestUrl: v }))} placeholder={CONFIG.ingestUrl || "https://script.google.com/macros/s/…/exec"} />
                 </Field>
               </div>
             </div>
@@ -147,6 +226,27 @@ export default function RepTools() {
                 <span className="eyebrow">{d.meta.id} · {fmtDateLong((d.meta.submitted_at || "").slice(0, 10))}{d.meta.demo ? " · sample" : ""}</span>
                 <h2 className="title" style={{ fontSize: 24, marginTop: 8 }}>{d.company.legal_name}</h2>
                 <p className="lead">{BUSINESS_TYPES.find((b) => b.id === d.business_type)?.label} · {cityLine(d.company)} · {d.company.phone} · {d.company.email}</p>
+
+                {inboxRow ? (
+                  <div className="sub" style={{ marginTop: 20 }}>
+                    <SubHead right={inboxRow.drive_folder_url ? <a className="link" href={inboxRow.drive_folder_url} target="_blank" rel="noreferrer">Drive folder</a> : null}>
+                      Onboarding stage · {stageLabel(inboxRow.status)}
+                    </SubHead>
+                    <div className="radio-row">
+                      {STAGES.map(([k, l]) => (
+                        <button type="button" key={k} className={inboxRow.status === k ? "on" : ""} onClick={() => setStage(k)} disabled={!!busy}>{l}</button>
+                      ))}
+                    </div>
+                    <div className="grid" style={{ marginTop: 16 }}>
+                      <Field label="Lexington account number" span={8} hint="saving it drafts the welcome email in Gmail">
+                        <Input value={acctInput} onChange={setAcctInput} placeholder="assigned by Lexington" />
+                      </Field>
+                      <div className="span-4" style={{ alignSelf: "end" }}>
+                        <button type="button" className="btn" onClick={saveAccountNumber} disabled={!!busy || !acctInput.trim()}>Save number</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 <Rule gold />
                 <SubHead>New Account Checklist</SubHead>
