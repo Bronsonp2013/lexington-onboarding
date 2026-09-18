@@ -179,6 +179,7 @@ export default function RepTools() {
             <div className="sub" style={{ marginTop: 16 }}>
               <SubHead right={<button type="button" className="btn quiet" onClick={loadInbox} disabled={!!busy}>{inbox ? "Refresh" : "Load"}</button>}>Application inbox</SubHead>
               {!inbox ? <p className="small">Applications recorded in the Lexington New Accounts sheet.</p> : null}
+              {note && !d ? <p className="small" style={{ color: "#8E3B1F" }}>{note}</p> : null}
               {inbox ? (
                 <ul className="files" style={{ margin: 0 }}>
                   {inbox.map((r) => (
