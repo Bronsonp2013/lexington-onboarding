@@ -67,6 +67,32 @@ const CASES = {
     d.references.financial_file = null;
     return d;
   },
+  // main state is not a Streamlined member (TX): it stays in the State box on page 1
+  retail_texas_multistate: () => {
+    const d = sampleRetail();
+    d.tax.state = "TX";
+    d.tax.additional_states = [{ state: "AR", reason: "Resale", id: "AR-55-01923" }];
+    return d;
+  },
+  // characters outside the standard PDF fonts (Polish, Czech, Chinese, emoji, zero-width space)
+  // must print as close substitutes instead of crashing the build
+  retail_unicode: () => {
+    const d = sampleRetail();
+    d.company.legal_name = "Łódź Interiors 東京 Design ✨";
+    d.company.dba = "Casa 🏠\u200b Dvořák";
+    d.contacts.owner.first_name = "Ştefan"; d.contacts.owner.last_name = "Dvořák";
+    d.ship_to[0].holidays = "Closed ☀ days\nand Dec 24–26";
+    d.shipping = { partial_ok: true, carrier: "preferred", preferred_carrier_name: "Łukasz Freight 🚚" };
+    d.sign.full_name = "Ştefan Dvořák"; d.sign.title = "Właściciel";
+    return d;
+  },
+  designer_unicode: () => {
+    const d = sampleDesigner();
+    d.company.legal_name = "Zoë & Øster Studio — Kraków ğ";
+    d.contacts.applicant.first_name = "Małgorzata"; d.contacts.applicant.last_name = "Wójcik 👩‍🎨";
+    d.freight.authorized_name = "Małgorzata Wójcik";
+    return d;
+  },
 };
 
 for (const [kind, make] of Object.entries(CASES)) {
@@ -75,10 +101,13 @@ for (const [kind, make] of Object.entries(CASES)) {
   d.meta.id = `LHB-TEST-${kind.toUpperCase()}`;
   d.meta.submitted_at = new Date().toISOString();
   d.sign.signature_png = makeSignaturePng();
+  d.meta.key = "test-key-must-not-leave-the-browser";
   const files = { cert: new File([Buffer.from("%PDF-1.4 fake cert")], "cert.pdf", { type: "application/pdf" }) };
   const packet = await buildPacket(d, files, { iamNumber: "" }, () => {});
   const dir = resolve(outDir, kind); mkdirSync(dir, { recursive: true });
   for (const f of packet.files) writeFileSync(resolve(dir, f.name), Buffer.from(await f.blob.arrayBuffer()));
   writeFileSync(resolve(dir, packet.zipName), Buffer.from(await packet.zipBlob.arrayBuffer()));
-  console.log(`${kind.padEnd(22)} zip ${(packet.zipBlob.size / 1024).toFixed(0).padStart(4)} KB  files ${packet.files.length}  warnings: ${packet.warnings.length ? packet.warnings.join(" | ") : "none"}`);
+  if (packet.json.includes(d.meta.key)) throw new Error(`${kind}: submission.json contains the resend key`);
+  if (kind.endsWith("_unicode") && !packet.json.includes(d.company.legal_name)) throw new Error(`${kind}: submission.json lost the original spelling`);
+  console.log(`${kind.padEnd(24)} zip ${(packet.zipBlob.size / 1024).toFixed(0).padStart(4)} KB  files ${packet.files.length}  warnings: ${packet.warnings.length ? packet.warnings.join(" | ") : "none"}`);
 }

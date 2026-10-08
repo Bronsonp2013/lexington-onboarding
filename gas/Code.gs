@@ -20,9 +20,11 @@ const CONFIG = {
   spreadsheetName: "Lexington New Accounts",
   driveRootName: "Lexington New Accounts",
   tasksListName: "Lexington Onboarding",
-  maxPayloadBytes: 8 * 1024 * 1024,
+  maxPayloadBytes: 12 * 1024 * 1024,     // two 3 MB uploads + the PDFs, base64-encoded, fit with room to spare
   maxSubmitsPerHour: 20,
   followUpBusinessDays: 5,
+  maxCellChars: 45000,                    // Sheets rejects any cell over 50,000 characters
+  maxContacts: 10, maxLocations: 30, maxSuppliers: 10, maxFiles: 12,
 };
 
 const STAGES = [
@@ -51,7 +53,11 @@ const APPLICATION_COLUMNS = [
   "source_url", "record_version",
 ];
 // Appended by the script (not sent by the client).
-const EXTRA_COLUMNS = ["received_at", "updated_at", "pathfinder_account_id", "notes", "record_json", "submission_json"];
+// submit_key_hash: SHA-256 of the random key the applicant's browser generated; only that
+// browser can resubmit (retry) the same application. notified_at: when the packet email went out.
+const EXTRA_COLUMNS = ["received_at", "updated_at", "pathfinder_account_id", "notes", "record_json", "submission_json", "submit_key_hash", "notified_at"];
+// Columns only the script or the rep may set. A submit never takes these from the browser.
+const SERVER_OWNED = ["status", "account_number", "pathfinder_sync", "drive_folder_url", "demo", "received_at", "pathfinder_account_id", "notes", "submit_key_hash", "notified_at"];
 const ALL_COLUMNS = APPLICATION_COLUMNS.concat(EXTRA_COLUMNS);
 
 const CONTACT_COLUMNS = ["application_id", "legal_name", "role", "first_name", "last_name", "title", "email", "phone", "is_primary"];
@@ -157,7 +163,7 @@ function doPost(e) {
     requireRep_(body);
     if (action === "list") return json_(handleList_(body));
     if (action === "get") return json_(handleGet_(body));
-    if (action === "status") return json_(handleStatus_(body));
+    if (action === "status") return json_(withLock_(() => handleStatus_(body)));
     return json_({ ok: false, error: "Unknown action" });
   } catch (err) {
     log_(body.application_id || (body.record && body.record.application_id) || "", action, "error", false, String(err));
@@ -176,31 +182,62 @@ function requireRep_(body) {
 
 // ---------- submit -------------------------------------------------------------------------
 function handleSubmit_(body) {
-  const record = body.record, submission = body.submission || {};
+  const record = body.record;
   if (!record || !record.application_id || !record.account || !record.account.name) throw new Error("Missing record");
   if (record.demo) return { ok: true, demo: true, steps: [] };
   if (body.website) return { ok: true, steps: [] }; // honeypot: pretend success, store nothing
+  const id = String(record.application_id);
+  if (!/^LHB-[A-Z0-9-]{4,40}$/.test(id)) throw new Error("Invalid application id");
+  const key = String(body.key || "");
+  if (!/^[A-Za-z0-9_-]{20,128}$/.test(key)) throw new Error("This page is out of date. Please reload it and submit again.");
+  if ((record.contacts || []).length > CONFIG.maxContacts || (record.locations || []).length > CONFIG.maxLocations ||
+      ((record.onboarding && record.onboarding.suppliers) || []).length > CONFIG.maxSuppliers || (body.files || []).length > CONFIG.maxFiles) {
+    throw new Error("Too many entries in this application.");
+  }
   rateLimit_();
 
-  const steps = [];
-  const id = record.application_id;
-  const ss = sheet_();
+  // The submission is the applicant's full answer set. The secret key never gets stored.
+  const submission = Object.assign({}, body.submission || {});
+  if (submission.meta) { submission.meta = Object.assign({}, submission.meta); delete submission.meta.key; }
 
-  // 1. durable first: the Applications row (upsert) + child rows
-  const row = body.row || flattenRecord_(record);
-  row.received_at = row.received_at || new Date().toISOString();
-  row.updated_at = new Date().toISOString();
-  row.status = row.status || "application_received";
-  row.pathfinder_sync = row.pathfinder_sync || "pending";
-  row.record_json = JSON.stringify(record);
-  row.submission_json = JSON.stringify(submission);
-  const existed = upsertRow_(ss.getSheetByName("Applications"), ALL_COLUMNS, "application_id", id, row);
-  replaceChildRows_(ss.getSheetByName("Contacts"), CONTACT_COLUMNS, id,
-    (record.contacts || []).map((c) => Object.assign({ application_id: id, legal_name: record.account.name }, c, { is_primary: c.is_primary ? "yes" : "" })));
-  replaceChildRows_(ss.getSheetByName("Locations"), LOCATION_COLUMNS, id,
-    (record.locations || []).map((l) => Object.assign({ application_id: id, legal_name: record.account.name }, l, { is_primary: l.is_primary ? "yes" : "", is_dc: l.is_dc ? "yes" : "" })));
-  replaceChildRows_(ss.getSheetByName("Suppliers"), SUPPLIER_COLUMNS, id,
-    ((record.onboarding && record.onboarding.suppliers) || []).map((s) => Object.assign({ application_id: id, legal_name: record.account.name }, s)));
+  const steps = [];
+  const ss = sheet_();
+  const keyHash = sha256_(key);
+
+  // 1. durable first: the Applications row (upsert) + child rows, under a lock so two
+  //    submissions at once cannot overwrite each other's rows.
+  const sheetResult = withLock_(() => {
+    const sh = ss.getSheetByName("Applications");
+    const existing = findRow_(sh, id);
+    if (existing) {
+      // Only the browser that first submitted this application may resend it, and only
+      // while nobody has started working on it.
+      if (existing.submit_key_hash !== keyHash) throw new Error("This application number was already received. Please contact " + CONFIG.repName + " at " + CONFIG.repEmail + " to make changes.");
+      if (existing.status && existing.status !== "application_received") throw new Error("This application is already being processed. Please contact " + CONFIG.repName + " at " + CONFIG.repEmail + " to make changes.");
+    }
+    const now = new Date().toISOString();
+    // The row is always built here from the record; anything the browser sends as `row` is ignored.
+    const row = flattenRecord_(record);
+    SERVER_OWNED.forEach((k) => { row[k] = existing ? existing[k] : ""; });
+    row.status = existing && existing.status ? existing.status : "application_received";
+    row.pathfinder_sync = existing && existing.pathfinder_sync ? existing.pathfinder_sync : "pending";
+    row.received_at = existing && existing.received_at ? existing.received_at : now;
+    row.submit_key_hash = keyHash;
+    row.updated_at = now;
+    row.record_json = jsonCell_(record);
+    // The signature image makes the full submission too big for a cell. The complete copy
+    // lives in Drive as submission.json; the cell keeps everything else for quick reading.
+    row.submission_json = jsonCell_(withoutSignature_(submission));
+    upsertRow_(sh, ALL_COLUMNS, "application_id", id, row);
+    replaceChildRows_(ss.getSheetByName("Contacts"), CONTACT_COLUMNS, id,
+      (record.contacts || []).map((c) => Object.assign({}, c, { application_id: id, legal_name: record.account.name, is_primary: c.is_primary ? "yes" : "" })));
+    replaceChildRows_(ss.getSheetByName("Locations"), LOCATION_COLUMNS, id,
+      (record.locations || []).map((l) => Object.assign({}, l, { application_id: id, legal_name: record.account.name, is_primary: l.is_primary ? "yes" : "", is_dc: l.is_dc ? "yes" : "" })));
+    replaceChildRows_(ss.getSheetByName("Suppliers"), SUPPLIER_COLUMNS, id,
+      ((record.onboarding && record.onboarding.suppliers) || []).map((s) => Object.assign({}, s, { application_id: id, legal_name: record.account.name })));
+    return { existed: !!existing, notifiedAt: existing ? existing.notified_at : "" };
+  });
+  const existed = sheetResult.existed;
   steps.push({ step: "sheet", ok: true, detail: existed ? "updated" : "created" });
   log_(id, "submit", "sheet", true, existed ? "updated existing row" : "new row");
 
@@ -212,14 +249,12 @@ function handleSubmit_(body) {
     files.forEach((f) => {
       const blob = Utilities.newBlob(Utilities.base64Decode(f.base64), f.mime || "application/octet-stream", f.name);
       blobs.push(blob);
-      const old = folder.getFilesByName(f.name);
-      while (old.hasNext()) old.next().setTrashed(true);
-      folder.createFile(blob);
+      replaceFile_(folder, blob);
     });
-    folder.createFile(Utilities.newBlob(JSON.stringify(record, null, 2), "application/json", "customer_record.json"));
-    if (!files.some((f) => f.name === "submission.json")) folder.createFile(Utilities.newBlob(JSON.stringify(submission, null, 2), "application/json", "submission.json"));
+    replaceFile_(folder, Utilities.newBlob(JSON.stringify(record, null, 2), "application/json", "customer_record.json"));
+    replaceFile_(folder, Utilities.newBlob(JSON.stringify(submission, null, 2), "application/json", "submission.json"));
     folderUrl = folder.getUrl();
-    updateCells_(ss.getSheetByName("Applications"), ALL_COLUMNS, id, { drive_folder_url: folderUrl });
+    withLock_(() => updateCells_(ss.getSheetByName("Applications"), ALL_COLUMNS, id, { drive_folder_url: folderUrl }));
     steps.push({ step: "drive", ok: true, detail: folderUrl });
     log_(id, "submit", "drive", true, folderUrl);
   } catch (err) { steps.push({ step: "drive", ok: false, detail: String(err) }); log_(id, "submit", "drive", false, String(err)); }
@@ -229,22 +264,25 @@ function handleSubmit_(body) {
     const zipName = "LHB-New-Account-" + slug_(record.account.name) + "-" + (record.submitted_at || "").slice(0, 10) + ".zip";
     const attachments = blobs.length ? [Utilities.zip(blobs, zipName)] : [];
     const primary = (record.contacts || [])[0] || {};
+    // A resend after a dropped connection is labelled, so a second email is never a surprise.
     GmailApp.sendEmail(CONFIG.repEmail,
-      "New account application — " + record.account.name + " (" + id + ")",
+      (sheetResult.notifiedAt ? "Updated account application — " : "New account application — ") + record.account.name + " (" + id + ")",
       (body.summary || flatSummary_(record)) + "\n\nDrive folder: " + (folderUrl || "(not filed)") + "\nApplication row: " + ss.getUrl() + "\n",
       { name: "Lexington New Account Application", replyTo: primary.email || record.account.email || "", attachments: attachments });
     steps.push({ step: "email", ok: true, detail: CONFIG.repEmail });
     log_(id, "submit", "email", true, CONFIG.repEmail);
+    if (!sheetResult.notifiedAt) withLock_(() => updateCells_(ss.getSheetByName("Applications"), ALL_COLUMNS, id, { notified_at: new Date().toISOString() }));
   } catch (err) { steps.push({ step: "email", ok: false, detail: String(err) }); log_(id, "submit", "email", false, String(err)); }
 
-  // 4. first workflow task
-  try {
+  // 4. first workflow task (once per application, not once per resend)
+  if (existed) steps.push({ step: "task", ok: true, detail: "already created" });
+  else try {
     const t = createTask_("Review packet — " + record.account.name, "Application " + id + "\n" + (folderUrl || ""), businessDaysFrom_(new Date(), 1));
     steps.push({ step: "task", ok: !!t, detail: t ? "Review packet (due tomorrow)" : "Tasks unavailable" });
   } catch (err) { steps.push({ step: "task", ok: false, detail: String(err) }); }
 
   // 5. CRM adapter
-  crmDispatch_("onApplicationReceived", record, { folderUrl: folderUrl });
+  if (!existed) crmDispatch_("onApplicationReceived", record, { folderUrl: folderUrl });
 
   return { ok: true, application_id: id, steps: steps, sheet_url: ss.getUrl(), drive_folder_url: folderUrl };
 }
@@ -282,13 +320,25 @@ function handleList_(body) {
 
 function handleGet_(body) {
   const sh = sheet_().getSheetByName("Applications");
-  const r = readRows_(sh, ALL_COLUMNS).filter((x) => x.application_id === body.application_id)[0];
+  const r = findRow_(sh, body.application_id);
   if (!r) throw new Error("Not found");
   let record = null, submission = null;
   try { record = JSON.parse(r.record_json || "null"); } catch (e) { /* ignore */ }
-  try { submission = JSON.parse(r.submission_json || "null"); } catch (e) { /* ignore */ }
-  delete r.record_json; delete r.submission_json;
+  // The complete submission (with the signature) is in Drive; the cell copy has no signature.
+  submission = submissionFromDrive_(r.drive_folder_url);
+  if (!submission) { try { submission = JSON.parse(r.submission_json || "null"); } catch (e) { /* ignore */ } }
+  if (submission && submission._omitted) submission = null;
+  delete r.record_json; delete r.submission_json; delete r.submit_key_hash; delete r._row;
   return { ok: true, row: r, record: record, submission: submission };
+}
+
+function submissionFromDrive_(folderUrl) {
+  const m = String(folderUrl || "").match(/folders\/([\w-]+)/);
+  if (!m) return null;
+  try {
+    const it = DriveApp.getFolderById(m[1]).getFilesByName("submission.json");
+    return it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString()) : null;
+  } catch (e) { return null; }
 }
 
 function handleStatus_(body) {
@@ -305,12 +355,14 @@ function handleStatus_(body) {
   if (body.pathfinder_account_id != null) changes.pathfinder_account_id = body.pathfinder_account_id;
   changes.updated_at = new Date().toISOString();
   const sh = sheet_().getSheetByName("Applications");
-  const before = readRows_(sh, ALL_COLUMNS).filter((x) => x.application_id === id)[0];
+  const before = findRow_(sh, id);
   if (!before) throw new Error("Not found");
   updateCells_(sh, ALL_COLUMNS, id, changes);
   const after = Object.assign({}, before, changes);
   const events = applyWorkflow_(before, after);
-  return { ok: true, application_id: id, status: after.status, account_number: after.account_number, events: events };
+  // Read back: the workflow may have advanced the stage (e.g. to account_number_assigned).
+  const now = findRow_(sh, id) || after;
+  return { ok: true, application_id: id, status: now.status, account_number: now.account_number, events: events };
 }
 
 // Fires for manual edits in the sheet as well as API changes.
@@ -318,11 +370,13 @@ function onSheetEdit(e) {
   try {
     const sh = e.range.getSheet();
     if (sh.getName() !== "Applications" || e.range.getRow() < 2) return;
-    const col = ALL_COLUMNS[e.range.getColumn() - 1];
+    // Map by the header row, not by position: columns added later sit at the end.
+    const header = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    const col = header[e.range.getColumn() - 1];
     if (col !== "status" && col !== "account_number") return;
-    const rowVals = sh.getRange(e.range.getRow(), 1, 1, ALL_COLUMNS.length).getValues()[0];
-    const after = {}; ALL_COLUMNS.forEach((k, i) => { after[k] = rowVals[i]; });
-    const before = Object.assign({}, after, { [col]: e.oldValue });
+    const rowVals = sh.getRange(e.range.getRow(), 1, 1, header.length).getValues()[0];
+    const after = {}; header.forEach((k, i) => { if (k) after[k] = str_(rowVals[i]); });
+    const before = Object.assign({}, after, { [col]: str_(e.oldValue) });
     applyWorkflow_(before, after);
   } catch (err) { log_("", "onEdit", "error", false, String(err)); }
 }
@@ -404,13 +458,31 @@ function sheet_() {
   return SpreadsheetApp.openById(id);
 }
 
+// Every value comes back as a string: Sheets turns typed numbers and dates into Number
+// and Date objects, which the rep tools and comparisons expect as text.
 function readRows_(sh, columns) {
   const last = sh.getLastRow();
   if (last < 2) return [];
   const width = Math.max(columns.length, sh.getLastColumn());
   const header = sh.getRange(1, 1, 1, width).getValues()[0];
   const vals = sh.getRange(2, 1, last - 1, width).getValues();
-  return vals.map((v, i) => { const o = { _row: i + 2 }; header.forEach((h, j) => { if (h) o[h] = v[j]; }); return o; });
+  return vals.map((v, i) => { const o = { _row: i + 2 }; header.forEach((h, j) => { if (h) o[h] = str_(v[j]); }); return o; });
+}
+
+function str_(v) {
+  if (v == null || v === "") return "";
+  if (v instanceof Date) return v.toISOString();
+  return String(v);
+}
+
+function findRow_(sh, id) {
+  return readRows_(sh, ALL_COLUMNS).filter((r) => r.application_id === String(id))[0] || null;
+}
+
+function withLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try { return fn(); } finally { lock.releaseLock(); }
 }
 
 function colIndex_(sh, name) {
@@ -423,7 +495,7 @@ function upsertRow_(sh, columns, keyCol, keyVal, obj) {
   const rows = readRows_(sh, columns);
   const hit = rows.filter((r) => String(r[keyCol]) === String(keyVal))[0];
   const header = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0];
-  const line = header.map((h) => (h in obj ? cell_(obj[h]) : (hit ? hit[h] : "")));
+  const line = header.map((h) => cell_(h in obj ? obj[h] : (hit ? hit[h] : "")));
   if (hit) { sh.getRange(hit._row, 1, 1, line.length).setValues([line]); return true; }
   sh.appendRow(line);
   return false;
@@ -449,14 +521,42 @@ function replaceChildRows_(sh, columns, id, items) {
   sh.getRange(sh.getLastRow() + 1, 1, lines.length, header.length).setValues(lines);
 }
 
+// Every string is written as plain text (leading apostrophe), so applicant input such as
+// "=IMPORTXML(...)" never runs as a formula, and ZIP 02134, phone +1 214..., or account
+// number 012345 keep their exact characters. Sheets hides the apostrophe.
 function cell_(v) {
-  if (v == null) return "";
-  if (typeof v === "object") return JSON.stringify(v);
-  return v;
+  if (v == null || v === "") return "";
+  if (typeof v === "number" || typeof v === "boolean") return v;
+  let s = typeof v === "object" ? JSON.stringify(v) : String(v);
+  if (s.length > CONFIG.maxCellChars) s = s.slice(0, CONFIG.maxCellChars) + " [truncated]";
+  return "'" + s;
+}
+
+// JSON for a sheet cell. Anything too large is replaced by a marker; the full copy is in Drive.
+function jsonCell_(obj) {
+  const s = JSON.stringify(obj);
+  return s.length > CONFIG.maxCellChars ? JSON.stringify({ _omitted: true, reason: "too large for a cell; see Drive" }) : s;
+}
+
+function withoutSignature_(submission) {
+  const copy = JSON.parse(JSON.stringify(submission || {}));
+  if (copy.sign && copy.sign.signature_png) { copy.sign.signature_png = ""; copy.sign.signature_in_drive = true; }
+  return copy;
+}
+
+function sha256_(s) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)
+    .map((b) => ((b + 256) % 256).toString(16).padStart(2, "0")).join("");
+}
+
+function replaceFile_(folder, blob) {
+  const old = folder.getFilesByName(blob.getName());
+  while (old.hasNext()) old.next().setTrashed(true);
+  folder.createFile(blob);
 }
 
 function log_(id, action, step, ok, detail) {
-  try { sheet_().getSheetByName("Log").appendRow([new Date().toISOString(), id, action, step, ok ? "ok" : "fail", String(detail || "").slice(0, 500)]); }
+  try { sheet_().getSheetByName("Log").appendRow([new Date().toISOString(), id, action, step, ok ? "ok" : "fail", String(detail || "").slice(0, 500)].map(cell_)); }
   catch (e) { Logger.log("log failed: " + e); }
 }
 
@@ -518,7 +618,12 @@ function businessDaysFrom_(start, n) {
 function slug_(s) { return String(s || "application").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").slice(0, 48); }
 
 // ---------- editor test --------------------------------------------------------------------------
-// Runs a fictional submission through the whole path twice (second call must update, not duplicate).
+// Runs a fictional submission through the whole path:
+//   1st call  → new row, Drive folder, email, task
+//   2nd call (same key) → same row updated, an "Updated" email, no second task
+//   3rd call (different key) → refused; the row is untouched
+// The submission carries a signature-sized string (120,000 characters) so the 50,000-character
+// cell limit is exercised the way a real phone signature would.
 function test_submit() {
   const id = "LHB-TEST-" + Utilities.formatDate(new Date(), "UTC", "yyyyMMddHHmm");
   const record = {
@@ -532,10 +637,23 @@ function test_submit() {
     onboarding: { carrier: "prepaid_freight_program", freight_state: "TX", freight_rate_pct: 16.25, tax_state: "TX", tax_permit_number: "3-00000-0000-0", suppliers: [], signed_by: "Test Person", signed_title: "Principal", signed_date: "2026-01-01", sales_policy_agreed: true },
     source: { app: "lexington-onboarding", url: "editor-test" },
   };
+  record.account.name = "=HYPERLINK(\"https://example.com\",\"Test Company " + id + "\")"; // must land as text, not a formula
+  record.account.zip = "02134";                                                              // must keep its leading zero
   const files = [{ name: "test.txt", mime: "text/plain", base64: Utilities.base64Encode("hello") }];
-  const r1 = handleSubmit_({ action: "submit", record: record, submission: { meta: { id: id } }, files: files });
-  const r2 = handleSubmit_({ action: "submit", record: record, submission: { meta: { id: id } }, files: files });
-  Logger.log(JSON.stringify(r1)); Logger.log(JSON.stringify(r2));
+  const submission = { meta: { id: id, key: "must-not-be-stored" }, sign: { signature_png: "data:image/png;base64," + new Array(120001).join("A") } };
+  const key = Utilities.getUuid().replace(/-/g, "");
+  const r1 = handleSubmit_({ action: "submit", key: key, record: record, submission: submission, files: files });
+  const r2 = handleSubmit_({ action: "submit", key: key, record: record, submission: submission, files: files });
+  let r3;
+  try { r3 = handleSubmit_({ action: "submit", key: Utilities.getUuid().replace(/-/g, ""), record: record, submission: submission, files: files }); }
+  catch (err) { r3 = { refused: String(err.message || err) }; }
+  Logger.log(JSON.stringify(r1)); Logger.log(JSON.stringify(r2)); Logger.log(JSON.stringify(r3));
   const rows = readRows_(sheet_().getSheetByName("Applications"), ALL_COLUMNS).filter((x) => x.application_id === id);
   Logger.log("rows for id (expect 1): " + rows.length);
+  Logger.log("legal_name stored as text (expect the =HYPERLINK text): " + (rows[0] && rows[0].legal_name));
+  Logger.log("zip (expect 02134): " + (rows[0] && rows[0].zip));
+  Logger.log("third call refused (expect a message): " + (r3 && r3.refused));
+  const got = handleGet_({ application_id: id });
+  Logger.log("signature restored from Drive (expect 120022): " + (got.submission && got.submission.sign && got.submission.sign.signature_png.length));
+  Logger.log("key stored anywhere (expect false): " + (JSON.stringify(got).indexOf("must-not-be-stored") >= 0));
 }

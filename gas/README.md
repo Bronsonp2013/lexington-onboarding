@@ -23,12 +23,21 @@ the zipped packet, a Google Task, and a queue entry for Pathfinder.
    the next deploy makes the live form use it.
 
 Test from the editor any time: run **`test_submit`**. It posts a fictional application
-twice and should leave one row, one Drive folder, and one email.
+with a phone-sized signature three times and logs what to expect next to each result:
+
+- one row and one Drive folder;
+- two emails, the second marked "Updated", and one task;
+- the third post, which uses a different key, refused;
+- the company name stored as text even though it starts with `=`, and ZIP `02134` kept;
+- the full signature read back from Drive.
+
+Delete the test row, its Drive folder and the two emails afterwards.
 
 ## Updating the script
 
 Paste the new `Code.gs`, then **Deploy → Manage deployments → Edit → Version: New**.
-The `/exec` URL does not change.
+The `/exec` URL does not change. Run `setup` again after an update that adds columns; it
+appends them to the sheet without touching existing data.
 
 ## Rep actions
 

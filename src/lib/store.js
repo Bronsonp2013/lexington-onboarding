@@ -60,6 +60,14 @@ export function makeId() {
   return `LHB-${y}${m}-${stamp}${rand}`;
 }
 
+// Secret proof that a resend comes from the browser that first submitted the application.
+// Lives only in this browser's draft; the server stores a hash of it.
+export function makeKey() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 export const todayISO = () => {
   const t = new Date();
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;

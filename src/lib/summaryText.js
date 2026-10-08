@@ -76,7 +76,7 @@ export function toSummaryText(d) {
   head("Signature");
   kv("Signed by", [d.sign.full_name, d.sign.title].filter(Boolean).join(", "));
   kv("Date", fmtDateLong(d.sign.date));
-  kv("Sales policy", d.sign.sales_policy_agreed ? "read and agreed" : "not acknowledged");
+  kv("Sales policy", d.sign.sales_policy_agreed ? "read and agreed" : "not presented");
   kv("Signature", d.sign.signature_png ? "drawn (stamped on forms)" : "missing");
 
   head("Representative");

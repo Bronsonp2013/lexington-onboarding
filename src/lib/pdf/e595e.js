@@ -1,6 +1,6 @@
 // Streamlined Sales and Use Tax Agreement — Certificate of Exemption (E-595E).
 import { loadTemplate, makeFiller, finalize, stampSignature } from "./util.js";
-import { LHB, SSUTA_EXEMPT_REASONS } from "../../data/constants.js";
+import { LHB, SSUTA_EXEMPT_REASONS, SSUTA_SUPPLEMENTAL_STATES } from "../../data/constants.js";
 import { joinAddr, fmtDate } from "../store.js";
 
 export async function fillE595E(d) {
@@ -9,10 +9,16 @@ export async function fillE595E(d) {
   const f = makeFiller(form);
   const c = d.company;
   const t = d.tax;
-  const extra = t.additional_states.filter((s) => s.state);
+  const reasonLabel = SSUTA_EXEMPT_REASONS.find(([k]) => k === t.reason)?.[1] ?? "";
+  const extra = t.additional_states.filter((s) => s.state && s.state !== t.state);
+  // Box 1 means "multistate page attached; the states are listed there". The main state
+  // must then appear on page 2 as well. Page 2 only lists Streamlined member states, so a
+  // main state that is not a member (e.g. TX) stays in the State box on page 1.
+  const mainOnPage2 = SSUTA_SUPPLEMENTAL_STATES.includes(t.state);
+  const page2 = extra.length ? [...(mainOnPage2 ? [{ state: t.state, reason: reasonLabel, id: t.id_number }] : []), ...extra] : [];
 
-  if (extra.length) f.check("Check Box 1");
-  else f.dropdown("State1", t.state);
+  if (page2.length) f.check("Check Box 1");
+  if (!page2.length || !mainOnPage2) f.dropdown("State1", t.state);
   if (!t.blanket) { f.check("Check Box 2"); f.text("Purchase Order #", t.single_po); }
 
   f.text("Name of Purchaser", c.legal_name + (c.dba ? ` dba ${c.dba}` : ""));
@@ -44,10 +50,10 @@ export async function fillE595E(d) {
   f.text("PhoneNumber", d.contacts.applicant.phone || c.phone);
   f.text("E-mailAdress", d.contacts.applicant.email || c.email);
 
-  if (extra.length) {
+  if (page2.length) {
     f.text("Name of Purchaser2", c.legal_name);
-    for (const s of extra) {
-      f.text(`Reason for exemption${s.state}`, s.reason || (SSUTA_EXEMPT_REASONS.find(([k]) => k === t.reason)?.[1] ?? ""), 8);
+    for (const s of page2) {
+      f.text(`Reason for exemption${s.state}`, s.reason || reasonLabel, 8);
       f.text(`Identification number${s.state}`, s.id, 8);
     }
   }

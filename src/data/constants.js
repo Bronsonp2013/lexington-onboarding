@@ -144,4 +144,6 @@ export const CLAIM_GUIDELINES = [
 ];
 
 export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
-export const MAX_PACKET_BYTES = 5 * 1024 * 1024;
+// Largest request the Apps Script accepts (gas/Code.gs CONFIG.maxPayloadBytes). Two 3 MB
+// uploads plus the PDFs come to roughly 9.5 MB once base64-encoded.
+export const MAX_PAYLOAD_BYTES = 12 * 1024 * 1024;

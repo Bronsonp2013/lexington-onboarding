@@ -51,7 +51,8 @@ export async function fillDesignerApp(d, opts = {}) {
   f.text("PM", fmtTime(s.hours_close));
   if (d.shipping.carrier === "lfi") f.check("LFI Freight Program attach s");
   if (d.shipping.carrier === "preferred") { f.check("Preferred Carrier"); f.text("Preferred_Freight_Carrier", d.shipping.preferred_carrier_name); }
-  f.radio("icant has read understands and agrees to the LHB Sales Policy", d.sign.sales_policy_agreed ? "Yes_2" : "No_2");
+  // Answered only when the applicant was shown the policy and agreed; never printed as "No".
+  if (d.sign.sales_policy_agreed) f.radio("icant has read understands and agrees to the LHB Sales Policy", "Yes_2");
 
   await finalize(doc, form);
   if (d.ship_to.length > 1) await appendShipToPage(doc, d);
@@ -121,7 +122,7 @@ export async function fillRetailApp(d, opts = {}) {
   f.text("close", fmtTime(s.hours_close));
   if (d.shipping.carrier === "lfi") f.check("LFI Freight Program attach s");
   if (d.shipping.carrier === "preferred") f.check("Preferred Carrier");
-  f.radio("icant has read understands and agrees to the LHBArtistica Home Sales Policy", d.sign.sales_policy_agreed ? "Yes_2" : "No_2");
+  if (d.sign.sales_policy_agreed) f.radio("icant has read understands and agrees to the LHBArtistica Home Sales Policy", "Yes_2");
 
   await finalize(doc, form);
   // signature box on page 1 (field "Signature" rect [97,92 304x25])

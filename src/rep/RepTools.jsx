@@ -15,6 +15,10 @@ import { CONFIG } from "../config.js";
 
 const KEY_SETTINGS = "lhb-onboarding:rep:v1";
 const loadSettings = () => { try { return JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}"); } catch { return {}; } };
+// Sheet values can arrive as numbers (a typed account number); the inputs need text.
+const text = (v) => (v == null ? "" : String(v));
+// Only a real Google Drive folder link is ever rendered as a link.
+const driveLink = (u) => (/^https:\/\/drive\.google\.com\//.test(text(u)) ? text(u) : "");
 
 export default function RepTools() {
   const [settings, setSettings] = useState(loadSettings);
@@ -49,8 +53,8 @@ export default function RepTools() {
       setUploads({});
       setD(merge(res.submission));
       setInboxRow(res.row);
-      setAcctInput(res.row.account_number || "");
-      setSel((s) => ({ ...s, accountNumber: res.row.account_number || "" }));
+      setAcctInput(text(res.row.account_number));
+      setSel((s) => ({ ...s, accountNumber: text(res.row.account_number) }));
       setFileName(`${row.legal_name} (from the sheet)`);
       setNote("");
     } catch (e) { setNote(`Could not open: ${e.message}`); }
@@ -74,9 +78,9 @@ export default function RepTools() {
     setBusy("Saving account number");
     try {
       const res = await repCall("status", settings.repToken, { application_id: inboxRow.application_id, account_number: acctInput }, ingestUrl);
-      setInboxRow((r) => ({ ...r, status: res.status, account_number: res.account_number }));
-      setSel((s) => ({ ...s, accountNumber: res.account_number || "" }));
-      setInbox((rows) => rows?.map((r) => (r.application_id === inboxRow.application_id ? { ...r, status: res.status, account_number: res.account_number } : r)) || rows);
+      setInboxRow((r) => ({ ...r, status: res.status, account_number: text(res.account_number) }));
+      setSel((s) => ({ ...s, accountNumber: text(res.account_number) }));
+      setInbox((rows) => rows?.map((r) => (r.application_id === inboxRow.application_id ? { ...r, status: res.status, account_number: text(res.account_number) } : r)) || rows);
       setNote(res.events?.includes("draft:welcome") ? "Account number saved. The welcome email is waiting as a draft in Gmail." : "Account number saved.");
     } catch (e) { setNote(`Could not save: ${e.message}`); }
     finally { setBusy(""); }
@@ -230,7 +234,7 @@ export default function RepTools() {
 
                 {inboxRow ? (
                   <div className="sub" style={{ marginTop: 20 }}>
-                    <SubHead right={inboxRow.drive_folder_url ? <a className="link" href={inboxRow.drive_folder_url} target="_blank" rel="noreferrer">Drive folder</a> : null}>
+                    <SubHead right={driveLink(inboxRow.drive_folder_url) ? <a className="link" href={driveLink(inboxRow.drive_folder_url)} target="_blank" rel="noreferrer">Drive folder</a> : null}>
                       Onboarding stage · {stageLabel(inboxRow.status)}
                     </SubHead>
                     <div className="radio-row">
@@ -243,7 +247,7 @@ export default function RepTools() {
                         <Input value={acctInput} onChange={setAcctInput} placeholder="assigned by Lexington" />
                       </Field>
                       <div className="span-4" style={{ alignSelf: "end" }}>
-                        <button type="button" className="btn" onClick={saveAccountNumber} disabled={!!busy || !acctInput.trim()}>Save number</button>
+                        <button type="button" className="btn" onClick={saveAccountNumber} disabled={!!busy || !text(acctInput).trim()}>Save number</button>
                       </div>
                     </div>
                   </div>

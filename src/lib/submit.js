@@ -1,10 +1,10 @@
 // Delivery to the ingestion endpoint (Google Apps Script). One POST carries the
 // CustomerRecord, the raw submission, and every file as base64. The script writes
 // the sheet, files Drive, emails the rep, creates the task, and queues Pathfinder.
-import { REP } from "../data/constants.js";
+import { REP, MAX_PAYLOAD_BYTES } from "../data/constants.js";
 import { CONFIG } from "../config.js";
 import { toSummaryText } from "./summaryText.js";
-import { toCustomerRecord, toApplicationRow } from "./crmRecord.js";
+import { toCustomerRecord } from "./crmRecord.js";
 
 export const deliveryConfigured = () => !!CONFIG.ingestUrl;
 
@@ -22,25 +22,31 @@ export async function buildPayload(d, packet) {
     if (f.kind === "json") continue; // the script writes submission.json itself
     files.push({ name: f.name, mime: f.blob.type || "application/octet-stream", base64: await blobToBase64(f.blob) });
   }
-  return { action: "submit", record, row: toApplicationRow(record), submission: d, files, summary: toSummaryText(d), website: "" };
+  // The key proves a resend comes from this browser; it travels on its own, never inside the submission.
+  const { key, ...meta } = d.meta;
+  return { action: "submit", key: key || "", record, submission: { ...d, meta }, files, summary: toSummaryText(d), website: "" };
 }
 
 // Apps Script web apps accept cross-origin POSTs only as "simple" requests: text/plain
 // body, no custom headers, follow the redirect. The JSON comes back readable.
 export async function postToIngest(payload, url = CONFIG.ingestUrl) {
   if (!url) throw new Error("Ingest URL is not configured.");
+  const body = JSON.stringify(payload);
+  if (body.length > MAX_PAYLOAD_BYTES) {
+    throw new Error(`Your uploaded files are too large to send together. Please download the packet and email it to ${REP.email}.`);
+  }
   let res;
   try {
-    res = await fetch(url, { method: "POST", body: JSON.stringify(payload), redirect: "follow" });
+    res = await fetch(url, { method: "POST", body, redirect: "follow" });
   } catch {
     throw new Error(`We could not reach the delivery service. Your answers are saved in this browser; please download the packet and email it to ${REP.email}, or try again in a few minutes.`);
   }
-  let body = null;
-  try { body = await res.json(); } catch { /* non-json */ }
-  if (!res.ok || !body || body.ok === false) {
-    throw new Error(body?.error || `Delivery failed (${res.status}). Please download your packet and email it to ${REP.email}.`);
+  let out = null;
+  try { out = await res.json(); } catch { /* non-json */ }
+  if (!res.ok || !out || out.ok === false) {
+    throw new Error(out?.error || `Delivery failed (${res.status}). Please download your packet and email it to ${REP.email}.`);
   }
-  return body;
+  return out;
 }
 
 export async function submitPacket(d, packet) {

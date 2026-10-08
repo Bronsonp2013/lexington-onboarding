@@ -6,8 +6,12 @@ import { fillFreightAgreement } from "./pdf/freight.js";
 import { fillCardForm } from "./pdf/ccForm.js";
 import { buildSummary } from "./pdf/summary.js";
 import { slug } from "./store.js";
+import { pdfSafe } from "./pdf/util.js";
 
-export async function buildPacket(d, files = {}, opts = {}, onProgress = () => {}) {
+export async function buildPacket(original, files = {}, rawOpts = {}, onProgress = () => {}) {
+  // Forms are filled from a printable copy; submission.json keeps the original answers.
+  const d = pdfSafe(original);
+  const opts = pdfSafe(rawOpts);
   const out = [];
   const warnings = [];
   const company = slug(d.company.legal_name);
@@ -33,7 +37,7 @@ export async function buildPacket(d, files = {}, opts = {}, onProgress = () => {
   if (files.cert) out.push({ name: `Attachment - Tax Certificate - ${files.cert.name}`, blob: files.cert, bytes: files.cert.size, kind: "upload" });
   if (files.financial) out.push({ name: `Attachment - Financial Statement - ${files.financial.name}`, blob: files.financial, bytes: files.financial.size, kind: "upload" });
 
-  const json = JSON.stringify(stripForJson(d), null, 2);
+  const json = JSON.stringify(stripForJson(original), null, 2);
   out.push({ name: "submission.json", blob: new Blob([json], { type: "application/json" }), bytes: json.length, kind: "json" });
 
   onProgress("Packaging");
@@ -45,9 +49,12 @@ export async function buildPacket(d, files = {}, opts = {}, onProgress = () => {
   return { files: out, zipBlob, zipName, json, warnings };
 }
 
-// The signature image stays in the JSON so the rep tools can regenerate forms.
+// The signature image stays in the JSON so the rep tools can regenerate forms. The
+// resend key is private to the applicant's browser and never leaves it in a file.
 function stripForJson(d) {
-  return d;
+  if (!d.meta?.key) return d;
+  const { key, ...meta } = d.meta;
+  return { ...d, meta };
 }
 
 export { downloadBlob } from "./download.js";

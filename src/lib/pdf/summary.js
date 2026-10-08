@@ -137,7 +137,7 @@ export async function buildSummary(d, opts = {}) {
   heading("Signature");
   kv("Signed by", [d.sign.full_name, d.sign.title].filter(Boolean).join(", "));
   kv("Date", fmtDateLong(d.sign.date));
-  kv("Sales policy", d.sign.sales_policy_agreed ? "Read and agreed" : "Not acknowledged");
+  kv("Sales policy", d.sign.sales_policy_agreed ? "Read and agreed" : "Not presented");
   if (d.sign.signature_png) {
     ensure(50);
     const png = await doc.embedPng(d.sign.signature_png);

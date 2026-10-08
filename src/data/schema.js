@@ -1,5 +1,6 @@
 // Submission shape, section schema, and required-field rules.
 import { BUSINESS_TYPES, WEEKDAYS } from "./constants.js";
+import { CONFIG } from "../config.js";
 
 export const SCHEMA_VERSION = 1;
 
@@ -119,7 +120,7 @@ export const SECTIONS = [
   {
     id: "review", kicker: "08", title: "Review & Sign",
     lead: "Confirm what you have entered, then sign once for every form.",
-    required: () => ["sign.sales_policy_agreed", "sign.certified", "sign.full_name", "sign.title", "sign.signature_png"],
+    required: () => [...(CONFIG.salesPolicyUrl ? ["sign.sales_policy_agreed"] : []), "sign.certified", "sign.full_name", "sign.title", "sign.signature_png"],
   },
 ];
 

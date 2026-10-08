@@ -51,4 +51,10 @@ Carrier election and freight state/rate, partial-ship preference, tax state, per
 
 ## Applications sheet columns
 
-`toApplicationRow(record)` flattens the record to one row; the header order is `APPLICATION_COLUMNS` in `src/lib/crmRecord.js` and must match `APPLICATION_COLUMNS` in `gas/Code.gs`. The full record is also stored in the row's `record_json` column, and the raw submission in `submission_json`, so nothing is lost when the flat columns change.
+The Apps Script flattens the record to one row with `flattenRecord_`, which mirrors `toApplicationRow(record)` in `src/lib/crmRecord.js`; the header order is `APPLICATION_COLUMNS` and must match in both files. The browser no longer sends a row of its own. The full record is also stored in the row's `record_json` column, and the submission in `submission_json` without the signature image (a drawn signature is larger than the 50,000-character cell limit). The complete submission, signature included, is `submission.json` in the application's Drive folder, and the rep `get` action reads it from there.
+
+Every text value is written as plain text, so ZIP codes, phone numbers and account numbers keep their exact characters and nothing an applicant types can run as a formula.
+
+**Server-owned columns.** A submit never takes these from the browser: `status`, `account_number`, `pathfinder_sync`, `drive_folder_url`, `demo`, `received_at`, `pathfinder_account_id`, `notes`, `submit_key_hash`, `notified_at`. Only the script and the rep tools (with the rep token) change them.
+
+**Resubmits.** The browser creates a random key with each application and sends it beside the record, never inside it. The script stores its SHA-256 in `submit_key_hash`. A later submit with the same `application_id` is accepted only with the same key and only while the status is still `application_received`; it updates the row and files, sends an email marked "Updated", and creates no second task. `notified_at` records when the first packet email went out.

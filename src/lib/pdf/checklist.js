@@ -1,5 +1,5 @@
 // REP ONLY — New Account Checklist (LR041624). Never shipped in the customer build.
-import { loadTemplate, makeFiller, finalize } from "./util.js";
+import { loadTemplate, makeFiller, finalize, pdfSafe } from "./util.js";
 import { BUSINESS_TYPES } from "../../data/constants.js";
 import { joinAddr } from "../store.js";
 
@@ -46,7 +46,9 @@ export function suggestedPricing(d) {
   return pick;
 }
 
-export async function fillChecklist(d, sel) {
+export async function fillChecklist(original, rawSel) {
+  const d = pdfSafe(original);
+  const sel = pdfSafe(rawSel);
   const doc = await loadTemplate("/rep-forms/new-account-checklist.pdf");
   const form = doc.getForm();
   const f = makeFiller(form);

@@ -101,11 +101,15 @@ export function Review({ d, set, err, jump, salesPolicyUrl }) {
       <Rule gold />
       <SubHead>Acknowledgements</SubHead>
       <div style={{ display: "grid", gap: 14 }}>
-        <Checkbox value={s.sales_policy_agreed} onChange={(v) => set("sign.sales_policy_agreed", v)}>
-          I have read, understand, and agree to the Lexington Home Brands Sales Policy
-          {salesPolicyUrl ? <> (<a href={salesPolicyUrl} target="_blank" rel="noreferrer" style={{ color: "var(--gold-burnish)" }}>read the policy</a>)</> : null}.
-        </Checkbox>
-        {err("sign.sales_policy_agreed") ? <div className="field"><div className="err">Required to submit.</div></div> : null}
+        {salesPolicyUrl ? (
+          <>
+            <Checkbox value={s.sales_policy_agreed} onChange={(v) => set("sign.sales_policy_agreed", v)}>
+              I have read, understand, and agree to the Lexington Home Brands Sales Policy
+              {" "}(<a href={salesPolicyUrl} target="_blank" rel="noreferrer" style={{ color: "var(--gold-burnish)" }}>read the policy</a>).
+            </Checkbox>
+            {err("sign.sales_policy_agreed") ? <div className="field"><div className="err">Required to submit.</div></div> : null}
+          </>
+        ) : null}
         <Checkbox value={s.certified} onChange={(v) => set("sign.certified", v)}>
           I certify that the information in this application is true and complete, authorize Lexington Home Brands to verify it,
           and understand that my signature below is applied to the credit application, the certificate of exemption

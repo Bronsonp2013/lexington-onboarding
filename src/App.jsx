@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { SECTIONS, visibleSections, sectionComplete, missingFields, computeComplete, EMPTY_SUBMISSION } from "./data/schema.js";
 import { REP, LHB } from "./data/constants.js";
-import { loadDraft, saveDraft, clearDraft, setPath, makeId, todayISO, KEY_STEP } from "./lib/store.js";
+import { loadDraft, saveDraft, clearDraft, setPath, makeId, makeKey, todayISO, KEY_STEP } from "./lib/store.js";
 import { sampleDesigner, sampleRetail, sampleSignaturePng } from "./data/sample.js";
 import { fileStore } from "./lib/files.js";
 import { downloadBlob } from "./lib/download.js";
@@ -74,12 +74,13 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // autosave (never in demo mode)
+  // autosave while the form is open (never in demo mode, never after submit: a delivered
+  // application must not reappear in this browser)
   useEffect(() => {
-    if (demo) return;
+    if (demo || route !== "form") return;
     const t = setTimeout(() => { saveDraft(data); setSavedFlash(true); setTimeout(() => setSavedFlash(false), 1200); }, 400);
     return () => clearTimeout(t);
-  }, [data, demo]);
+  }, [data, demo, route]);
   useEffect(() => { if (!demo) try { localStorage.setItem(KEY_STEP, stepId); } catch { /* ignore */ } }, [stepId, demo]);
 
   // demo hash switching
@@ -125,10 +126,13 @@ export default function App() {
     if (incomplete.length) { goTo(incomplete[0].id); setShowErrors(true); return; }
     const d = JSON.parse(JSON.stringify(data));
     d.meta.id = d.meta.id || makeId();
+    if (!demo) d.meta.key = d.meta.key || makeKey();
     d.meta.submitted_at = new Date().toISOString();
     d.meta.demo = !!demo;
     if (!d.sign.date) d.sign.date = todayISO();
     if (!d.freight.date) d.freight.date = d.sign.date;
+    // Without a policy link nobody was shown the policy, whatever an older draft says.
+    if (!CONFIG.salesPolicyUrl) d.sign.sales_policy_agreed = false;
     setBusy("Preparing your forms");
     try {
       const { buildPacket } = await import("./lib/packet.js");
@@ -146,9 +150,10 @@ export default function App() {
       setData(d);
       setResult({ packet, delivered, error, steps, configured: deliveryConfigured() });
       setRoute("submitted");
-      // The draft is cleared only once the endpoint has confirmed; a failed delivery keeps
-      // everything so the customer can retry or download and email the packet.
+      // The draft is cleared only once the endpoint has confirmed. A failed delivery keeps
+      // everything, including the id and key, so a retry updates the same application.
       if (!demo && delivered) { clearDraft(); fileStore.clear(); }
+      else if (!demo) saveDraft(d);
       scrollTop();
     } catch (e) {
       alert(`Something went wrong while preparing the forms: ${e.message}`);
@@ -156,11 +161,10 @@ export default function App() {
   }
 
   const startOver = () => {
-    clearDraft();
-    fileStore.clear();
-    setFiles({ cert: null, financial: null });
     setResult(null);
-    if (demo) { setData(loadSample(demo)); } else setData(EMPTY_SUBMISSION());
+    // The demonstration never touches the visitor's real draft or uploaded files.
+    if (demo) { setData(loadSample(demo)); }
+    else { clearDraft(); fileStore.clear(); setFiles({ cert: null, financial: null }); setData(EMPTY_SUBMISSION()); }
     setStepId("welcome");
     setRoute("form");
     scrollTop();
@@ -203,7 +207,7 @@ export default function App() {
 
       <main className="main">
         {route === "submitted" ? (
-          <Success d={data} result={result} demo={demo} onStartOver={startOver} />
+          <Success d={data} result={result} demo={demo} onStartOver={startOver} onRetry={() => { setResult(null); setRoute("form"); scrollTop(); }} />
         ) : (
           <div className="layout">
             <aside className="rail">
@@ -293,7 +297,7 @@ function loadSample(kind) {
 
 const STEP_LABELS = { sheet: "Application recorded", drive: "Forms filed", email: "Sent to your representative", task: "Follow-up scheduled" };
 
-function Success({ d, result, demo, onStartOver }) {
+function Success({ d, result, demo, onStartOver, onRetry }) {
   const { packet, delivered, error, configured, steps = [] } = result;
   const first = REP.name.split(" ")[0];
   const partial = delivered && steps.some((s) => !s.ok);
@@ -313,6 +317,7 @@ function Success({ d, result, demo, onStartOver }) {
           <Notice warn title={error ? "Delivery did not go through" : "Email delivery not set up"}>
             {error || "This copy of the application is running without an email service."} Download the packet and send it to {REP.email}, or{" "}
             <a href={mailtoFallback(d)} style={{ color: "inherit" }}>open an email now</a>.
+            {error && configured ? <> Your answers are saved, so you can also <button type="button" className="link" onClick={onRetry}>try sending again</button>.</> : null}
           </Notice>
         </div>
       ) : null}
